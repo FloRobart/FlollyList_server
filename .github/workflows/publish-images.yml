@@ -4,7 +4,7 @@ name: Test, build and publish Docker images
 on:
   push:
     branches:
-      - master
+      - main
 
 permissions:
   contents: read
