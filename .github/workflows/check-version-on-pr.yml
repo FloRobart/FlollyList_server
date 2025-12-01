@@ -3,7 +3,7 @@ name: Check package version on PR to master
 on:
   pull_request:
     branches:
-      - master
+      - main
     types: [opened, synchronize, reopened]
 
 jobs:
