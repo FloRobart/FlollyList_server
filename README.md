@@ -15,18 +15,76 @@
 
 # Présentation
 
-
+FlollyList server est le serveur backend de l'application FlollyList. Il fournit une API RESTful pour gérer les données des utilisateurs, à savoir la liste des proches d'un utilisateur ainsi que tous les cadeaux associés à chaque proche.
 
 # Fonctionnalités
 
-- [x] API RESTful avec Express.js
+- [x] Ajouter des proches
+- [x] Modifier des proches
+- [x] Supprimer des proches
+- [x] Ajouter des cadeaux à un proche
+- [x] Modifier des cadeaux
+- [x] Supprimer des cadeaux
+- [x] Authentification des utilisateurs à l'aide de JWT [FlorAccess](https://github.com/FloRobart/FlorAccess_server)
 
 # Installation
 
 ## Pour le développement
 
+1. Cloner le dépôt GitHub
+
+  ```bash
+  git clone https://github.com/FloRobart/FlollyList_server.git
+  ```
+
+2. Accéder au répertoire du projet
+
+  ```bash
+  cd FlollyList_server
+  ```
+
+3. Installer les dépendances
+
+  ```bash
+  npm install
+  ```
+
+4. Créer un fichier `.env` à la racine du projet et y ajouter les variables d'environnement nécessaires (vous pouvez vous baser sur le fichier `.env.example`)
+
+  ```bash
+  cp .env.example .env
+  ```
+
+5. Démarrer le serveur en mode développement
+
+  ```bash
+  npm run dev-docker
+  ```
+
+6. Le serveur devrait maintenant être accessible à l'adresse `http://localhost:26004`
+7. Accéder à la documentation de l'API via Swagger à l'adresse `http://localhost:26004/api-docs`
+
 ## Pour la production
 
+1. Récupérer les images Docker depuis [Docker Hub](https://hub.docker.com/u/florobart) ou depuis [GitHub Container Registry](https://github.com/FloRobart?tab=packages&repo_name=FlollyList_server)
+
+  ```bash
+  docker pull florobart/flollylist_server-server:latest
+  docker pull florobart/flollylist_server-db:latest
+  ```
+  
+2. Créer un fichier `.env` à la racine du projet et y ajouter les variables d'environnement nécessaires (vous pouvez vous baser sur le fichier `.env.example`)
+
+  ```bash
+  touch .env
+  nano .env
+  ```
+
+3. Copier le fichier `docker-compose.yml` à la racine du projet et lancer les conteneurs Docker
+
+```bash
+docker-compose up -d
+```
 
 # Auteur
 
