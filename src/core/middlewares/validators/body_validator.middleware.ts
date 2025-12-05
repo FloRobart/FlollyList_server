@@ -13,9 +13,11 @@ import * as logger from "../../utils/logger";
  */
 export const bodyValidator = (schema: ZodType) => (req: Request, _res: Response, next: NextFunction) => {
     try {
+        logger.debug("body", req.body);
         req.body = { ...req.body, validatedData: { ...req.body.validatedData, body: schema.parse(req.body) } };
         next();
     } catch (error) {
+        logger.debug("Body validation error:", error);
         next(new AppError("Invalid request data", 400));
     }
 };

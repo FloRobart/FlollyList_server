@@ -10,7 +10,7 @@
  *       required:
  *         - id
  *         - people_name
- *         - person_id
+ *         - people_id
  *         - user_id
  *         - created_at
  *         - updated_at
@@ -30,7 +30,7 @@
  *         link:
  *           type: string
  *           example: "http://example.com/chocolate-box"
- *         person_id:
+ *         people_id:
  *           type: integer
  *           example: 2
  *         user_id:
@@ -56,7 +56,7 @@
  *       type: object
  *       required:
  *         - people_name
- *         - person_id
+ *         - people_id
  *         - user_id
  *       properties:
  *         people_name:
@@ -71,7 +71,7 @@
  *         link:
  *           type: string
  *           example: "http://example.com/chocolate-box"
- *         person_id:
+ *         people_id:
  *           type: integer
  *           example: 2
  *         user_id:
@@ -92,7 +92,7 @@
  *       required:
  *         - id
  *         - people_name
- *         - person_id
+ *         - people_id
  *         - user_id
  *         - created_at
  *         - updated_at
@@ -112,7 +112,7 @@
  *         link:
  *           type: string
  *           example: "http://example.com/chocolate-box"
- *         person_id:
+ *         people_id:
  *           type: integer
  *           example: 2
  *         user_id:

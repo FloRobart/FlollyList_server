@@ -22,7 +22,7 @@ export const GiftsSchema = z.object({
     gift_year: z.int().nullable().default(null),
     link: z.string().trim().max(512).nullable().default(null),
 
-    person_id: z.int().min(1),
+    people_id: z.int().min(1),
     user_id: z.int().min(1),
 
     created_at: z.string().readonly(),
