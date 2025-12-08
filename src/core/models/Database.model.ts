@@ -53,6 +53,7 @@ export abstract class ADatabase implements IDatabase {
 
             return res.rows || [];
         } catch (error) {
+            console.error('Database query error:', error);
             throw (error instanceof AppError) ? error : new AppError("Database unknown error");
         }
     }

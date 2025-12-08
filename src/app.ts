@@ -111,7 +111,7 @@ app.use(authorizationValidator);
 app.use('/gifts', giftsRoutes);
 
 /* People routes */
-app.use('/people', peoplesRoutes);
+app.use('/peoples', peoplesRoutes);
 
 
 /* Default Route Handler (404) */

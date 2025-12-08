@@ -17,12 +17,10 @@ export const IdSchema = z.object({
  */
 export const PeoplesSchema = z.object({
     id: z.int().min(1),
-    people_name: z.string().trim().min(1).max(255),
-    people_description: z.string().nullable().default(null),
-    people_year: z.int().nullable().default(null),
-    link: z.string().trim().max(512).nullable().default(null),
+    first_name: z.string().trim().min(1).max(255),
+    last_name: z.string().trim().min(1).max(255).nullable().default(null),
+    date_of_birth: z.string().nullable().default(null),
 
-    person_id: z.int().min(1),
     user_id: z.int().min(1),
 
     created_at: z.string().readonly(),
