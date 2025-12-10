@@ -9,8 +9,7 @@
  *       type: object
  *       required:
  *         - id
- *         - people_name
- *         - people_id
+ *         - first_name
  *         - user_id
  *         - created_at
  *         - updated_at
@@ -18,29 +17,30 @@
  *         id:
  *           type: integer
  *           example: 1
- *         people_name:
+ *         first_name:
  *           type: string
- *           example: "Chocolate Box"
- *         people_description:
- *           type: string
- *           example: "A box of assorted chocolates."
- *         people_year:
- *           type: integer
- *           example: 2025
- *         link:
- *           type: string
- *           example: "http://example.com/chocolate-box"
- *         people_id:
- *           type: integer
- *           example: 2
+ *           example: "John"
+ *         last_name:
+ *           oneOf:
+ *             - type: string
+ *               example: "Doe"
+ *             - type: 'null'
+ *         date_of_birth:
+ *           oneOf:
+ *             - type: string
+ *               format: "YYYY-MM-DDTHH:mm:ss[.sss][Z]"
+ *               example: "1990-01-01:00:00:00"
+ *             - type: 'null'
  *         user_id:
  *           type: integer
  *           example: 1
  *         created_at:
  *           type: string
+ *           format: "YYYY-MM-DDTHH:mm:ss[.sss][Z]"
  *           example: "2024-01-01T00:00:00.000Z"
  *         updated_at:
  *           type: string
+ *           format: "YYYY-MM-DDTHH:mm:ss[.sss][Z]"
  *           example: "2024-01-01T00:00:00.000Z"
  */
 
@@ -55,28 +55,18 @@
  *     PeoplesInsert:
  *       type: object
  *       required:
- *         - people_name
- *         - people_id
- *         - user_id
+ *         - first_name
  *       properties:
- *         people_name:
+ *         first_name:
  *           type: string
- *           example: "Chocolate Box"
- *         people_description:
+ *           example: "John"
+ *         last_name:
  *           type: string
- *           example: "A box of assorted chocolates."
- *         people_year:
- *           type: integer
- *           example: 2025
- *         link:
+ *           example: "Doe"
+ *         date_of_birth:
  *           type: string
- *           example: "http://example.com/chocolate-box"
- *         people_id:
- *           type: integer
- *           example: 2
- *         user_id:
- *           type: integer
- *           example: 1
+ *           format: "YYYY-MM-DDTHH:mm:ss[.sss][Z]"
+ *           example: "1990-01-01:00:00:00"
  */
 
 
@@ -91,8 +81,8 @@
  *       type: object
  *       required:
  *         - id
- *         - people_name
- *         - people_id
+ *         - first_name
+ *         - last_name
  *         - user_id
  *         - created_at
  *         - updated_at
@@ -100,28 +90,25 @@
  *         id:
  *           type: integer
  *           example: 1
- *         people_name:
+ *         first_name:
  *           type: string
- *           example: "Chocolate Box"
- *         people_description:
+ *           example: "John"
+ *         last_name:
  *           type: string
- *           example: "A box of assorted chocolates."
- *         people_year:
- *           type: integer
- *           example: 2025
- *         link:
+ *           example: "Doe"
+ *         date_of_birth:
  *           type: string
- *           example: "http://example.com/chocolate-box"
- *         people_id:
- *           type: integer
- *           example: 2
+ *           format: "YYYY-MM-DDTHH:mm:ss[.sss][Z]"
+ *           example: "1990-01-01:00:00:00"
  *         user_id:
  *           type: integer
  *           example: 1
  *         created_at:
  *           type: string
+ *           format: "YYYY-MM-DDTHH:mm:ss[.sss][Z]"
  *           example: "2024-01-01T00:00:00.000Z"
  *         updated_at:
  *           type: string
+ *           format: "YYYY-MM-DDTHH:mm:ss[.sss][Z]"
  *           example: "2024-01-01T00:00:00.000Z"
  */

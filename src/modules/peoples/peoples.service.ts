@@ -19,14 +19,6 @@ import { PeoplesSchema } from './peoples.schema';
 export async function selectPeoples(userId: number): Promise<People[]> {
     try {
         const peoples = await PeoplesRepository.selectPeoples(userId);
-
-        // convert Date to string if necessary
-        peoples.forEach(people => {
-            people.date_of_birth = (people.date_of_birth as any)?.toISOString();
-            people.created_at = (people.created_at as any)?.toISOString();
-            people.updated_at = (people.updated_at as any)?.toISOString();
-        });
-
         return PeoplesSchema.array().parse(peoples);
     } catch (error) {
         throw (error instanceof ZodError) ? new AppError("Failed to parse peoples", 500) : error;
@@ -46,12 +38,6 @@ export async function selectPeoples(userId: number): Promise<People[]> {
 export async function insertPeoples(peopleData: PeopleInsert): Promise<People> {
     try {
         const peoples = await PeoplesRepository.insertPeoples(peopleData);
-
-        // convert Date to string if necessary
-        peoples.date_of_birth = (peoples.date_of_birth as any)?.toISOString();
-        peoples.created_at = (peoples.created_at as any)?.toISOString();
-        peoples.updated_at = (peoples.updated_at as any)?.toISOString();
-
         return PeoplesSchema.parse(peoples);
     } catch (error) {
         console.error("Insert people error:", error);
@@ -71,12 +57,6 @@ export async function insertPeoples(peopleData: PeopleInsert): Promise<People> {
 export async function updatePeoples(peopleData: PeopleUpdate): Promise<People> {
     try {
         const peoples = await PeoplesRepository.updatePeoples(peopleData);
-
-        // convert Date to string if necessary
-        peoples.date_of_birth = (peoples.date_of_birth as any)?.toISOString();
-        peoples.created_at = (peoples.created_at as any)?.toISOString();
-        peoples.updated_at = (peoples.updated_at as any)?.toISOString();
-
         return PeoplesSchema.parse(peoples);
     } catch (error) {
         throw (error instanceof ZodError) ? new AppError("Failed to parse people (people updated successfully)", 500) : error;
