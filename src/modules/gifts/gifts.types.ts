@@ -4,11 +4,6 @@ import * as Schemas from "./gifts.schema";
 
 
 /**
- * Type representing an ID parameter.
- */
-export type Id = z.infer<typeof Schemas.IdSchema>;
-
-/**
  * Type representing a gift object.
  */
 export type Gift = z.infer<typeof Schemas.GiftsSchema>;

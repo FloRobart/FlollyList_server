@@ -19,13 +19,6 @@ import { GiftsSchema } from './gifts.schema';
 export async function selectGifts(userId: number): Promise<Gift[]> {
     try {
         const gifts = await GiftsRepository.selectGifts(userId);
-
-        // convert Date to string if necessary
-        gifts.forEach(gift => {
-            gift.created_at = (gift.created_at as any)?.toISOString();
-            gift.updated_at = (gift.updated_at as any)?.toISOString();
-        });
-
         return GiftsSchema.array().parse(gifts);
     } catch (error) {
         throw (error instanceof ZodError) ? new AppError("Failed to parse gifts", 500) : error;
@@ -45,11 +38,6 @@ export async function selectGifts(userId: number): Promise<Gift[]> {
 export async function insertGifts(giftData: GiftInsert): Promise<Gift> {
     try {
         const gifts = await GiftsRepository.insertGifts(giftData);
-
-        // convert Date to string if necessary
-        gifts.created_at = (gifts.created_at as any)?.toISOString();
-        gifts.updated_at = (gifts.updated_at as any)?.toISOString();
-
         return GiftsSchema.parse(gifts);
     } catch (error) {
         console.debug("Insert gift error:", error);
@@ -69,11 +57,6 @@ export async function insertGifts(giftData: GiftInsert): Promise<Gift> {
 export async function updateGifts(giftData: GiftUpdate): Promise<Gift> {
     try {
         const gifts = await GiftsRepository.updateGifts(giftData);
-
-        // convert Date to string if necessary
-        gifts.created_at = (gifts.created_at as any)?.toISOString();
-        gifts.updated_at = (gifts.updated_at as any)?.toISOString();
-
         return GiftsSchema.parse(gifts);
     } catch (error) {
         throw (error instanceof ZodError) ? new AppError("Failed to parse gift (gift updated successfully)", 500) : error;

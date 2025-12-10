@@ -2,7 +2,8 @@ import { Router } from "express";
 import { bodyValidator } from "../../core/middlewares/validators/body_validator.middleware";
 import { paramsQueryValidator } from "../../core/middlewares/validators/params_query_validator.middleware";
 import * as PeoplesController from "./peoples.controller";
-import { IdSchema, PeoplesInsertSchema, PeoplesUpdateSchema } from "./peoples.schema";
+import { PeoplesInsertSchema, PeoplesUpdateSchema } from "./peoples.schema";
+import { IdSchema } from "../../core/schemas/common.schema";
 
 
 
@@ -73,12 +74,12 @@ router.get('/', PeoplesController.selectPeoples);
  *         schema:
  *           type: string
  *           example: "Bearer <token>"
- *       - in: body
- *         name: people
- *         required: true
- *         description: people object that needs to be added
- *         schema:
- *           $ref: '#/components/schemas/PeoplesInsert'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PeoplesInsert'
  *     responses:
  *       201:
  *         description: Created people
@@ -113,7 +114,7 @@ router.post('/', bodyValidator(PeoplesInsertSchema), PeoplesController.insertPeo
 /*========*/
 /**
  * @swagger
- * /peoples:
+ * /peoples/{id}:
  *   put:
  *     tags:
  *       - Peoples
@@ -132,12 +133,12 @@ router.post('/', bodyValidator(PeoplesInsertSchema), PeoplesController.insertPeo
  *         schema:
  *           type: integer
  *           example: 1
- *       - in: body
- *         name: people
- *         required: true
- *         description: people object that needs to be updated
- *         schema:
- *           $ref: '#/components/schemas/PeoplesUpdate'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PeoplesUpdate'
  *     responses:
  *       200:
  *         description: Updated people
@@ -172,7 +173,7 @@ router.put('/:id', paramsQueryValidator(IdSchema), bodyValidator(PeoplesUpdateSc
 /*========*/
 /**
  * @swagger
- * /peoples:
+ * /peoples/{id}:
  *   delete:
  *     tags:
  *       - Peoples

@@ -4,11 +4,6 @@ import * as Schemas from "./peoples.schema";
 
 
 /**
- * Type representing an ID parameter.
- */
-export type Id = z.infer<typeof Schemas.IdSchema>;
-
-/**
  * Type representing a people object.
  */
 export type People = z.infer<typeof Schemas.PeoplesSchema>;
