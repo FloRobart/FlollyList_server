@@ -1,6 +1,16 @@
-import { z } from "zod";
+import { z, ZodNumber } from "zod";
 
 
+
+/**
+ * Schema to validate an ID parameter.
+ */
+export const IdSchema = z.object({
+    id: z.preprocess<unknown, ZodNumber>(
+        (val) => typeof val === "string" ? Number(val.trim()) : val,
+        z.int().min(1),
+    ),
+});
 
 /**
  * Preprocess to convert string to Date.
