@@ -10,7 +10,7 @@
 CREATE TABLE peoples (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     first_name VARCHAR(255) NOT NULL,
-    last_name VARCHAR(255),
+    last_name VARCHAR(255) DEFAULT NULL,
     date_of_birth DATE,
 
     user_id INTEGER NOT NULL,
