@@ -2,7 +2,8 @@ import { Router } from "express";
 import { bodyValidator } from "../../core/middlewares/validators/body_validator.middleware";
 import { paramsQueryValidator } from "../../core/middlewares/validators/params_query_validator.middleware";
 import * as PeoplesController from "./peoples.controller";
-import { IdSchema, PeoplesInsertSchema, PeoplesUpdateSchema } from "./peoples.schema";
+import { PeoplesInsertSchema, PeoplesUpdateSchema } from "./peoples.schema";
+import { IdSchema } from "../../core/schemas/common.schema";
 
 
 

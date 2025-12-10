@@ -1,17 +1,7 @@
-import { z, ZodNumber } from "zod";
+import { z } from "zod";
 import { ZStringDate, ZStringDateNullable } from "../../core/schemas/common.schema";
 
 
-
-/**
- * Schema to validate an ID parameter.
- */
-export const IdSchema = z.object({
-    id: z.preprocess<unknown, ZodNumber>(
-        (val) => typeof val === "string" ? Number(val.trim()) : val,
-        z.int().min(1),
-    ),
-});
 
 /**
  * Schema to validate a people object.
