@@ -2,7 +2,8 @@ import { Router } from "express";
 import { bodyValidator } from "../../core/middlewares/validators/body_validator.middleware";
 import { paramsQueryValidator } from "../../core/middlewares/validators/params_query_validator.middleware";
 import * as GiftsController from "./gifts.controller";
-import { IdSchema, GiftsInsertSchema, GiftsUpdateSchema } from "./gifts.schema";
+import { GiftsInsertSchema, GiftsUpdateSchema } from "./gifts.schema";
+import { IdSchema } from "../../core/schemas/common.schema";
 
 
 
@@ -73,12 +74,12 @@ router.get('/', GiftsController.selectGifts);
  *         schema:
  *           type: string
  *           example: "Bearer <token>"
- *       - in: body
- *         name: gift
- *         required: true
- *         description: gift object that needs to be added
- *         schema:
- *           $ref: '#/components/schemas/GiftsInsert'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/GiftsInsert'
  *     responses:
  *       201:
  *         description: Created gift
@@ -113,7 +114,7 @@ router.post('/', bodyValidator(GiftsInsertSchema), GiftsController.insertGifts);
 /*========*/
 /**
  * @swagger
- * /gifts:
+ * /gifts/{id}:
  *   put:
  *     tags:
  *       - Gifts
@@ -132,12 +133,12 @@ router.post('/', bodyValidator(GiftsInsertSchema), GiftsController.insertGifts);
  *         schema:
  *           type: integer
  *           example: 1
- *       - in: body
- *         name: gift
- *         required: true
- *         description: gift object that needs to be updated
- *         schema:
- *           $ref: '#/components/schemas/GiftsUpdate'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/GiftsUpdate'
  *     responses:
  *       200:
  *         description: Updated gift
@@ -172,7 +173,7 @@ router.put('/:id', paramsQueryValidator(IdSchema), bodyValidator(GiftsUpdateSche
 /*========*/
 /**
  * @swagger
- * /gifts:
+ * /gifts/{id}:
  *   delete:
  *     tags:
  *       - Gifts

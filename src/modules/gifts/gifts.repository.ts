@@ -67,7 +67,7 @@ export async function insertGifts(giftData: GiftInsert): Promise<Gift> {
 export async function updateGifts(giftData: GiftUpdate): Promise<Gift> {
     try {
         /* Extract id and user_id, prepare fields to update */
-        const { id, user_id, ...fieldsToUpdate } = giftData;
+        const { id, user_id, created_at, updated_at, ...fieldsToUpdate } = giftData;
         const keys = Object.keys(fieldsToUpdate);
 
         if (!id || !user_id || keys.length === 0) {
