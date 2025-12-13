@@ -1,6 +1,6 @@
 {
   "name": "flollylist",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "FlollyList API",
   "main": "server.js",
   "scripts": {
@@ -28,7 +28,7 @@
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/ms": "^2.1.0",
-    "@types/node": "^25.0.0",
+    "@types/node": "^25.0.1",
     "@types/nodemailer": "^7.0.4",
     "@types/pg": "^8.16.0",
     "install": "^0.13.0",

@@ -12,6 +12,7 @@ CREATE TABLE gifts (
     gift_name VARCHAR(255) NOT NULL,
     gift_description TEXT,
     gift_year INTEGER,
+    price NUMERIC,
     link VARCHAR(512),
 
     people_id INTEGER REFERENCES peoples(id) ON DELETE CASCADE,
