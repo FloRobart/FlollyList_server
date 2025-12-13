@@ -35,4 +35,16 @@ export const GiftsInsertSchema = GiftsSchema.extend({
 /**
  * Schema to validate a gift object for updating.
  */
-export const GiftsUpdateSchema = GiftsSchema;
+export const GiftsUpdateSchema = GiftsSchema.extend({
+    id: GiftsSchema.shape.id.optional(),
+    gift_name: GiftsSchema.shape.gift_name,
+    gift_description: GiftsSchema.shape.gift_description,
+    gift_year: GiftsSchema.shape.gift_year,
+    link: GiftsSchema.shape.link.optional(),
+
+    people_id: GiftsSchema.shape.people_id,
+    user_id: GiftsSchema.shape.user_id.optional(),
+}).omit({
+    created_at: true,
+    updated_at: true,
+});
