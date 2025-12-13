@@ -40,7 +40,7 @@ export const GiftsUpdateSchema = GiftsSchema.extend({
     gift_name: GiftsSchema.shape.gift_name,
     gift_description: GiftsSchema.shape.gift_description,
     gift_year: GiftsSchema.shape.gift_year,
-    link: GiftsSchema.shape.link.optional(),
+    link: GiftsSchema.shape.link,
 
     people_id: GiftsSchema.shape.people_id,
     user_id: GiftsSchema.shape.user_id.optional(),
