@@ -33,4 +33,14 @@ export const PeoplesInsertSchema = PeoplesSchema.extend({
 /**
  * Schema to validate a people object for updating.
  */
-export const PeoplesUpdateSchema = PeoplesSchema;
+export const PeoplesUpdateSchema = PeoplesSchema.extend({
+    id: PeoplesSchema.shape.id.optional(),
+    first_name: PeoplesSchema.shape.first_name,
+    last_name: PeoplesSchema.shape.last_name,
+    date_of_birth: PeoplesSchema.shape.date_of_birth.optional(),
+
+    user_id: PeoplesSchema.shape.user_id.optional(),
+}).omit({
+    created_at: true,
+    updated_at: true,
+});

@@ -67,7 +67,7 @@ export async function insertPeoples(peopleData: PeopleInsert): Promise<People> {
 export async function updatePeoples(peopleData: PeopleUpdate): Promise<People> {
     try {
         /* Extract id and user_id, prepare fields to update */
-        const { id, user_id, created_at, updated_at, ...fieldsToUpdate } = peopleData;
+        const { id, user_id, ...fieldsToUpdate } = peopleData;
         const keys = Object.keys(fieldsToUpdate);
 
         if (!id || !user_id || keys.length === 0) {
