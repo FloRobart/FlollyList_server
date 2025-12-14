@@ -11,7 +11,16 @@ export const GiftsSchema = z.object({
     gift_name: z.string().trim().min(1).max(255),
     gift_description: z.string().nullable().default(null),
     gift_year: z.int().nullable().default(null),
-    price: z.number().min(0).nullable().default(null),
+    price: z.preprocess(
+        (val) => {
+            if (typeof val === "string" && val.trim() !== "") {
+                const num = Number(val);
+                return isNaN(num) ? val : num;
+            }
+            return val;
+        },
+        z.number().min(0).default(0)
+    ),
     link: z.string().trim().max(2048).nullable().default(null),
 
     people_id: z.int().min(1),
