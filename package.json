@@ -1,6 +1,6 @@
 {
   "name": "flollylist",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "FlollyList API",
   "main": "server.js",
   "scripts": {
