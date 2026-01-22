@@ -31,12 +31,6 @@ if (AppConfig.app_env.includes('prod')) {
     app.set('trust proxy', true);
 }
 
-/* Logger */
-app.use(async (req: Request, _res: Response, next: NextFunction) => {
-    logger.info(`Incoming request`, { ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress, method: req.method, url: req.url });
-    next();
-});
-
 /* Rate Limiter */
 app.use(limiter);
 
@@ -51,61 +45,40 @@ app.get("/favicon.ico", (_req, res) => {
     res.sendFile(path.join(__dirname, "../public/favicon.ico"));
 });
 
-/* Logger */
-app.use(async (req: Request, _res: Response, next: NextFunction) => {
-    logger.info(`Incoming request`, { ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress, method: req.method, url: req.url });
-    next();
-});
 
-
-/* Swagger - only in development */
+/* Swagger setup for API documentation in development environment */
 if (AppConfig.app_env.includes('dev')) {
-    const SWAGGER_JSON_PATH = `${__dirname}/swagger/json/swagger.json`;
-    try {
-        /* Swagger setup */
-        const swaggerUi = require('swagger-ui-express');
-        const swaggerJsDoc = require('swagger-jsdoc');
-        const swaggerOptions = {
-            swaggerDefinition: {
-                openapi: '3.0.0',
-                info: {
-                    title: `${AppConfig.app_name} API`,
-                    version: '1.0.0',
-                    description: 'API documentation',
-                },
-                servers: [
-                    {
-                        url: AppConfig.base_url,
-                    },
-                ],
+    const swaggerUi = require('swagger-ui-express');
+    const swaggerJsDoc = require('swagger-jsdoc');
+    const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+    const swaggerOptions = {
+        swaggerDefinition: {
+            openapi: '3.0.0',
+            info: {
+                title: AppConfig.app_env,
+                version: packageJson.version,
+                description: `${AppConfig.app_env} documentation`,
             },
-            apis: [`${__dirname}/modules/**/*.ts`, `${__dirname}/swagger/**/*.ts`, `${__dirname}/modules/**/*.js`, `${__dirname}/swagger/**/*.js`],
-        };
+        },
+        apis: [`${__dirname}/modules/**/*.ts`, `${__dirname}/modules/**/*.js`],
+    };
 
-        const swaggerDocs = swaggerJsDoc(swaggerOptions);
-        app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-        app.get('/api-docs.json', (_req, res) => {
-            if (!app.locals.swaggerJsonFileCreated) {
-                res.status(500).json({ error: "The Swagger JSON file encountered a problem creating it. Please see : " + AppConfig.base_url + "/api-docs" });
-                return;
-            }
-            return res.download(SWAGGER_JSON_PATH)
-        });
-
-        /* Create swagger json file */
-        fs.writeFileSync(SWAGGER_JSON_PATH, Buffer.from(JSON.stringify(swaggerDocs), 'utf8'));
-        app.locals.swaggerJsonFileCreated = true;
-        logger.success("Swagger JSON file created at :", SWAGGER_JSON_PATH);
-    } catch (err) {
-        logger.error(err);
-        app.locals.swaggerJsonFileCreated = false;
-        logger.error("Error creating swagger JSON file at :", SWAGGER_JSON_PATH);
-    }
+    const swaggerDocs = swaggerJsDoc(swaggerOptions);
+    app.use('/api-docs', morgan(config.log));
+    app.get('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+    app.get('/api-docs.json', (_req, res) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(swaggerDocs);
+    });
 }
 
 
 /* Authentication Middleware */
 app.use(authorizationValidator);
+
+/* Logger */
+morgan.token("remote-user", (req: Request) => { return req.body.user.email || "Unknown User" });
+app.use(morgan(AppConfig.log_format));
 
 /* Gifts routes */
 app.use('/gifts', giftsRoutes);
