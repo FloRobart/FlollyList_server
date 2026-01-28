@@ -1,10 +1,9 @@
 import express from 'express';
-import { Request, Response, NextFunction } from 'express';
+import { Request } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import fs from 'node:fs';
 import path from 'node:path';
-import * as logger from './core/utils/logger';
 import { errorHandler } from './core/middlewares/error.middleware';
 import { helmetOptions } from './core/middlewares/helmet_http_headers.middleware';
 import { limiter } from './core/middlewares/rate_limiter.middleware';
@@ -115,7 +114,3 @@ app.use(errorHandler);
 
 
 export default app;
-function morgan(log_format: any): import("express-serve-static-core").RequestHandler<{}, any, any, import("qs").ParsedQs, Record<string, any>> {
-    throw new Error('Function not implemented.');
-}
-
