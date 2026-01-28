@@ -22,13 +22,8 @@ const router = Router();
  *       - Gifts
  *     summary: Retrieve a list of gifts of the authenticated user
  *     description: Retrieve a list of gifts associated with the authenticated user.
- *     parameters:
- *       - in: headers
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer <token>"
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: A list of gifts
@@ -67,13 +62,8 @@ router.get('/', GiftsController.selectGifts);
  *       - Gifts
  *     summary: Create a new gift for the authenticated user
  *     description: Create a new gift associated with the authenticated user.
- *     parameters:
- *       - in: headers
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer <token>"
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -120,13 +110,9 @@ router.post('/', bodyValidator(GiftsInsertSchema), GiftsController.insertGifts);
  *       - Gifts
  *     summary: Update an existing gift for the authenticated user
  *     description: Update an existing gift associated with the authenticated user.
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
- *       - in: headers
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer <token>"
  *       - in: path
  *         name: id
  *         required: true
@@ -179,13 +165,9 @@ router.put('/:id', paramsQueryValidator(IdSchema), bodyValidator(GiftsUpdateSche
  *       - Gifts
  *     summary: Delete an existing gift for the authenticated user
  *     description: Delete an existing gift associated with the authenticated user.
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
- *       - in: headers
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer <token>"
  *       - in: path
  *         name: id
  *         required: true

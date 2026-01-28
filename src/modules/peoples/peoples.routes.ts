@@ -22,13 +22,8 @@ const router = Router();
  *       - Peoples
  *     summary: Retrieve a list of peoples of the authenticated user
  *     description: Retrieve a list of peoples associated with the authenticated user.
- *     parameters:
- *       - in: headers
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer <token>"
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: A list of peoples
@@ -67,13 +62,8 @@ router.get('/', PeoplesController.selectPeoples);
  *       - Peoples
  *     summary: Create a new people for the authenticated user
  *     description: Create a new people associated with the authenticated user.
- *     parameters:
- *       - in: headers
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer <token>"
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -120,13 +110,9 @@ router.post('/', bodyValidator(PeoplesInsertSchema), PeoplesController.insertPeo
  *       - Peoples
  *     summary: Update an existing people for the authenticated user
  *     description: Update an existing people associated with the authenticated user.
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
- *       - in: headers
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer <token>"
  *       - in: path
  *         name: id
  *         required: true
@@ -179,13 +165,9 @@ router.put('/:id', paramsQueryValidator(IdSchema), bodyValidator(PeoplesUpdateSc
  *       - Peoples
  *     summary: Delete an existing people for the authenticated user
  *     description: Delete an existing people associated with the authenticated user.
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
- *       - in: headers
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer <token>"
  *       - in: path
  *         name: id
  *         required: true

@@ -1,10 +1,9 @@
 import express from 'express';
-import { Request, Response, NextFunction } from 'express';
+import { Request } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import fs from 'node:fs';
 import path from 'node:path';
-import * as logger from './core/utils/logger';
 import { errorHandler } from './core/middlewares/error.middleware';
 import { helmetOptions } from './core/middlewares/helmet_http_headers.middleware';
 import { limiter } from './core/middlewares/rate_limiter.middleware';
@@ -13,6 +12,7 @@ import { defaultRouteHandler } from './core/middlewares/default_route.middleware
 import giftsRoutes from './modules/gifts/gifts.routes';
 import peoplesRoutes from './modules/peoples/peoples.routes';
 import AppConfig from './config/AppConfig';
+import morgan from 'morgan';
 
 
 
@@ -28,14 +28,8 @@ app.use(helmet(helmetOptions));
 
 /* Trust proxy in production */
 if (AppConfig.app_env.includes('prod')) {
-    app.set('trust proxy', true);
+    app.set('trust proxy', 1);
 }
-
-/* Logger */
-app.use(async (req: Request, _res: Response, next: NextFunction) => {
-    logger.info(`Incoming request`, { ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress, method: req.method, url: req.url });
-    next();
-});
 
 /* Rate Limiter */
 app.use(limiter);
@@ -48,64 +42,61 @@ app.get('/', (_req, res) => { res.status(200).send('HEALTH CHECK') });
 
 /* Favicon */
 app.get("/favicon.ico", (_req, res) => {
-    res.sendFile(path.join(__dirname, "../public/favicon.ico"));
+    res.sendFile(path.join(__dirname, "../public/icons/favicon.ico"));
 });
 
-/* Logger */
-app.use(async (req: Request, _res: Response, next: NextFunction) => {
-    logger.info(`Incoming request`, { ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress, method: req.method, url: req.url });
-    next();
-});
+/* Static public files */
+app.use(express.static(path.join(process.cwd(), "public")));
 
-
-/* Swagger - only in development */
+/* Swagger setup for API documentation in development environment */
 if (AppConfig.app_env.includes('dev')) {
-    const SWAGGER_JSON_PATH = `${__dirname}/swagger/json/swagger.json`;
-    try {
-        /* Swagger setup */
-        const swaggerUi = require('swagger-ui-express');
-        const swaggerJsDoc = require('swagger-jsdoc');
-        const swaggerOptions = {
-            swaggerDefinition: {
-                openapi: '3.0.0',
-                info: {
-                    title: `${AppConfig.app_name} API`,
-                    version: '1.0.0',
-                    description: 'API documentation',
-                },
-                servers: [
-                    {
-                        url: AppConfig.base_url,
-                    },
-                ],
+    const swaggerUi = require('swagger-ui-express');
+    const swaggerJsDoc = require('swagger-jsdoc');
+    const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+    const swaggerOptions = {
+        swaggerDefinition: {
+            openapi: '3.0.0',
+            info: {
+                title: AppConfig.app_name,
+                version: packageJson.version,
+                description: `${AppConfig.app_name} documentation`,
             },
-            apis: [`${__dirname}/modules/**/*.ts`, `${__dirname}/swagger/**/*.ts`, `${__dirname}/modules/**/*.js`, `${__dirname}/swagger/**/*.js`],
-        };
+        },
+        apis: [
+            `${__dirname}/modules/**/*.ts`,
+            `${__dirname}/modules/**/*.js`,
+            `${__dirname}/swagger/**/*.ts`,
+            `${__dirname}/swagger/**/*.js`,
+        ],
+    };
 
-        const swaggerDocs = swaggerJsDoc(swaggerOptions);
-        app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-        app.get('/api-docs.json', (_req, res) => {
-            if (!app.locals.swaggerJsonFileCreated) {
-                res.status(500).json({ error: "The Swagger JSON file encountered a problem creating it. Please see : " + AppConfig.base_url + "/api-docs" });
-                return;
-            }
-            return res.download(SWAGGER_JSON_PATH)
-        });
+    const swaggerUiOptions = {
+        explorer: false,
+        swaggerOptions: {
+            deepLinking: false,
+        },
+    };
 
-        /* Create swagger json file */
-        fs.writeFileSync(SWAGGER_JSON_PATH, Buffer.from(JSON.stringify(swaggerDocs), 'utf8'));
-        app.locals.swaggerJsonFileCreated = true;
-        logger.success("Swagger JSON file created at :", SWAGGER_JSON_PATH);
-    } catch (err) {
-        logger.error(err);
-        app.locals.swaggerJsonFileCreated = false;
-        logger.error("Error creating swagger JSON file at :", SWAGGER_JSON_PATH);
-    }
+    const swaggerDocs = swaggerJsDoc(swaggerOptions);
+    app.use('/api-docs', morgan(AppConfig.log_format), swaggerUi.serve, swaggerUi.setup(swaggerDocs, swaggerUiOptions));
+    app.get('/api-docs.json', (_req, res) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(swaggerDocs);
+    });
 }
 
 
 /* Authentication Middleware */
 app.use(authorizationValidator);
+
+/* Logger */
+morgan.token("remote-user", (req: Request) => {
+    const bodyUserEmail = (req as any)?.body?.user?.email;
+    const reqUserEmail = (req as any)?.user?.email;
+    return bodyUserEmail || reqUserEmail || "Unknown User";
+});
+app.use(morgan(AppConfig.log_format));
+
 
 /* Gifts routes */
 app.use('/gifts', giftsRoutes);
