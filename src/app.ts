@@ -43,7 +43,7 @@ app.get('/', (_req, res) => { res.status(200).send('HEALTH CHECK') });
 
 /* Favicon */
 app.get("/favicon.ico", (_req, res) => {
-    res.sendFile(path.join(__dirname, "../public/favicon.ico"));
+    res.sendFile(path.join(__dirname, "../public/icons/favicon.ico"));
 });
 
 /* Static public files */
