@@ -98,6 +98,7 @@ morgan.token("remote-user", (req: Request) => {
 });
 app.use(morgan(AppConfig.log_format));
 
+
 /* Gifts routes */
 app.use('/gifts', giftsRoutes);
 
