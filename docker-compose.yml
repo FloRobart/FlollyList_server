@@ -1,57 +1,90 @@
-services:
-  flollylist-db:
-    image: florobart/flollylist-db:latest
-    restart: always
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - db_data:/var/lib/postgresql/flollylist_db_data
-    networks:
-      - flollylist-net
-    security_opt:
-      - no-new-privileges:true
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} || exit 1"]
-      interval: 5s
-      timeout: 30s
-      retries: 5
+# Production only: no port is published, the API is only reachable through the Traefik reverse proxy.
 
-  flollylist-server:
-    image: florobart/flollylist-server:latest
-    working_dir: /app
-    restart: always
+services:
+  flollylist-api:
+    image: florobart/flollylist-api:${API_VERSION:-latest}
+    restart: unless-stopped
+
+    # Forwards stop signals to Node and reaps zombie processes, which Node does not do as PID 1
+    init: true
+
     env_file: .env
-    depends_on:
-      flollylist-db:
-        condition: service_healthy
+    environment:
+      # Forced so that a wrong value in .env cannot disable the production behaviours (trust proxy, CSP, no Swagger)
+      APP_ENV: prod
+
+      # A file rather than a variable, so the password does not appear in docker inspect
+      DB_PASSWORD_FILE: /run/secrets/db_password
+
+    secrets:
+      - source: api_db_password
+        target: db_password
+
     networks:
-      - flower-garden-net
-      - flollylist-net
-    ports:
-      - ${APP_PORT:-}:80
-    security_opt:
-      - no-new-privileges:true
+      # Requests get in through this network, which only Traefik shares
+      - flollylist-api-net
+      - flollylist-database-net
+      # Outgoing calls only: authentication server
+      - flollylist-api-egress-net
+
+    # Privileges
+    # NET_BIND_SERVICE is not needed: Docker allows unprivileged processes to bind port 80 inside a container
+    user: "1800:1800"
     cap_drop:
       - ALL
-    cap_add:
-      - NET_BIND_SERVICE
-    read_only: true
-    user: "1800:1800"
-    tmpfs:
-      - /tmp:exec,nosuid,nodev
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://flollylist-server:80/ || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    security_opt:
+      - no-new-privileges:true
 
-volumes:
-  db_data:
+    # Nothing is writable: the application only logs to stdout and never uses the filesystem.
+    # "ipc: none" also removes /dev/shm, the only writable location left by "read_only".
+    read_only: true
+    ipc: none
+
+    # Resource limits, to contain a denial of service or a memory leak
+    pids_limit: 100
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: 1.0
+
+    # Core dumps would contain the secrets held in memory
+    ulimits:
+      core: 0
+
+    # Prevents the logs from filling up the disk of the host
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+    # Written in JavaScript because the image contains neither a shell nor wget
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:80/', { signal: AbortSignal.timeout(4000) }).then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1));"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+# The top-level names are unique to this repository: the wrapper assembles every repository
+# in one project, where two repositories using the same name would share a single secret.
+secrets:
+  api_db_password:
+    file: ./secrets/db_password
 
 networks:
-  flower-garden-net:
-    external: true
-  flollylist-net:
-    driver: bridge
+  flollylist-api-net:
+    name: flollylist-api-net
+    internal: true
+
+  # Same definition as in flollylist-database: "name" makes both repositories join one network
+  flollylist-database-net:
+    name: flollylist-database-net
+    internal: true
+
+  # The API needs the outside, but a network with a gateway must not be shared with anyone
+  flollylist-api-egress-net:
+    name: flollylist-api-egress-net

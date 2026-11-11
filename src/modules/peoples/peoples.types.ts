@@ -1,19 +1,13 @@
 import { z } from "zod";
-import * as Schemas from "./peoples.schema";
+import { PeoplesInsertSchema, PeoplesSchema, PeoplesUpdateSchema } from "./peoples.schema";
 
 
 
-/**
- * Type representing a people object.
- */
-export type People = z.infer<typeof Schemas.PeoplesSchema>;
+/* SELECT */
+export type People = z.infer<typeof PeoplesSchema>;
 
-/**
- * Type representing a people object for insertion.
- */
-export type PeopleInsert = z.infer<typeof Schemas.PeoplesInsertSchema>;
+/* INSERT */
+export type PeopleInsert = z.infer<typeof PeoplesInsertSchema>;
 
-/**
- * Type representing a people object for updating.
- */
-export type PeopleUpdate = z.infer<typeof Schemas.PeoplesUpdateSchema>;
+/* UPDATE */
+export type PeopleUpdate = z.infer<typeof PeoplesUpdateSchema>;

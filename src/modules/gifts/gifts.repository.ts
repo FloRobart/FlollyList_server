@@ -1,7 +1,23 @@
-import type { Gift, GiftInsert, GiftUpdate } from "./gifts.types";
-
 import { AppError } from "../../core/models/AppError.model";
 import { Database } from "../../core/models/Database.model";
+import { Gift, GiftInsert, GiftUpdate } from "./gifts.types";
+
+
+
+/*
+ * Every query names the user: a user only ever reaches its own gifts, and can only give
+ * a gift to one of its own people. The database checks it a second time, with the foreign key
+ * on (people_id, user_id).
+ * Database.execute already turns any failure into an AppError, without revealing the database.
+ */
+
+
+
+/**
+ * Row of the gifts table, as returned by PostgreSQL: a NUMERIC column comes as a string,
+ * which keeps the exact value of the price.
+ */
+type GiftRow = Omit<Gift, 'price'> & { price: string };
 
 
 
@@ -9,22 +25,29 @@ import { Database } from "../../core/models/Database.model";
 /* SELECT */
 /*========*/
 /**
- * Get all gifts for a user.
+ * Gets all the gifts of a user.
  * @param userId The ID of the user.
- * @returns An array of Gift objects.
- * @throws AppError if there is an issue retrieving the gifts.
+ * @returns The gifts of the user, in the order of their creation.
+ * @throws AppError if the gifts cannot be retrieved.
  */
 export async function selectGifts(userId: number): Promise<Gift[]> {
-    try {
-        let query = "SELECT * FROM gifts WHERE user_id = $1;";
-        let values = [userId];
+    const query = "SELECT * FROM gifts WHERE user_id = $1 ORDER BY id;";
 
-        const gifts = await Database.execute<Gift>({ text: query, values: values });
+    const rows = await Database.execute<GiftRow>({ text: query, values: [userId] });
+    return rows.map(toGift);
+}
 
-        return gifts
-    } catch (error) {
-        throw (error instanceof AppError) ? error : new AppError("Failed to retrieve gifts", 500);
-    }
+/**
+ * Counts the gifts of a user.
+ * @param userId The ID of the user.
+ * @returns The number of gifts of the user.
+ * @throws AppError if the gifts cannot be counted.
+ */
+export async function countGifts(userId: number): Promise<number> {
+    const query = "SELECT count(*)::integer AS count FROM gifts WHERE user_id = $1;";
+
+    const rows = await Database.execute<{ count: number }>({ text: query, values: [userId] });
+    return rows[0].count;
 }
 
 
@@ -32,27 +55,28 @@ export async function selectGifts(userId: number): Promise<Gift[]> {
 /* INSERT */
 /*========*/
 /**
- * Insert a new gift for a user.
- * @param giftData The gift data to insert.
- * @returns The newly created Gift object.
- * @throws AppError if there is an issue inserting the gift.
+ * Creates a gift for a person of a user.
+ * The row is built from the person found for this user: without it, nothing is inserted.
+ * The values are cast, because inside a SELECT, PostgreSQL cannot guess their type from the columns.
+ * @param userId The ID of the user.
+ * @param gift The gift to create.
+ * @returns The created gift.
+ * @throws AppError 404 if the user has no person with the ID of the gift.
  */
-export async function insertGifts(giftData: GiftInsert): Promise<Gift> {
-    try {
-        const keys = Object.keys(giftData);
-        const columns = keys.join(", ");
-        const placeholders = keys.map((_, i) => `$${i + 1}`).join(", ");
+export async function insertGift(userId: number, gift: GiftInsert): Promise<Gift> {
+    const query = `
+        INSERT INTO gifts (gift_name, gift_description, gift_year, price, link, people_id, user_id)
+        SELECT $1::varchar, $2::text, $3::integer, $4::numeric, $5::varchar, peoples.id, peoples.user_id
+        FROM peoples
+        WHERE peoples.id = $6 AND peoples.user_id = $7
+        RETURNING *;
+    `;
+    const values = [gift.gift_name, gift.gift_description, gift.gift_year, gift.price, gift.link, gift.people_id, userId];
 
-        const values = keys.map(key => (giftData as any)[key]);
-        const query = `INSERT INTO gifts (${columns}) VALUES (${placeholders}) RETURNING *;`;
+    const rows = await Database.execute<GiftRow>({ text: query, values });
+    if (rows.length === 0) { throw new AppError("People not found", 404); }
 
-        const rows = await Database.execute<Gift>({ text: query, values });
-        if (rows.length === 0) { throw new AppError("No gift inserted", 500); }
-
-        return rows[0];
-    } catch (error) {
-        throw (error instanceof AppError) ? error : new AppError("Failed to insert gifts", 500);
-    }
+    return toGift(rows[0]);
 }
 
 
@@ -60,36 +84,27 @@ export async function insertGifts(giftData: GiftInsert): Promise<Gift> {
 /* UPDATE */
 /*========*/
 /**
- * Update an existing gift for a user.
- * @param giftData The gift data to update.
- * @returns The updated Gift object.
+ * Replaces the fields of a gift of a user, possibly moving it to another of its people.
+ * @param userId The ID of the user.
+ * @param giftId The ID of the gift to update.
+ * @param gift The new fields of the gift.
+ * @returns The updated gift.
+ * @throws AppError 404 if the user has no gift with this ID, or no person with the ID of the gift.
  */
-export async function updateGifts(giftData: GiftUpdate): Promise<Gift> {
-    try {
-        /* Extract id and user_id, prepare fields to update */
-        const { id, user_id, ...fieldsToUpdate } = giftData;
-        const keys = Object.keys(fieldsToUpdate);
+export async function updateGift(userId: number, giftId: number, gift: GiftUpdate): Promise<Gift> {
+    const query = `
+        UPDATE gifts
+        SET gift_name = $1, gift_description = $2, gift_year = $3, price = $4, link = $5, people_id = $6
+        WHERE id = $7 AND user_id = $8
+            AND EXISTS (SELECT 1 FROM peoples WHERE peoples.id = $6 AND peoples.user_id = $8)
+        RETURNING *;
+    `;
+    const values = [gift.gift_name, gift.gift_description, gift.gift_year, gift.price, gift.link, gift.people_id, giftId, userId];
 
-        if (!id || !user_id || keys.length === 0) {
-            throw new AppError("Missing data to update", 400);
-        }
+    const rows = await Database.execute<GiftRow>({ text: query, values });
+    if (rows.length === 0) { throw new AppError("No gift updated", 404); }
 
-        /* Build SET clause and values */
-        const setClause = keys.map((key, i) => `${key} = $${i + 1}`).join(", ");
-        const values = keys.map(key => (fieldsToUpdate as any)[key]);
-
-        /* Append id and user_id to values for WHERE clause */
-        const query = `UPDATE gifts SET ${setClause} WHERE id = $${values.length + 1} AND user_id = $${values.length + 2} RETURNING *;`;
-        values.push(id, user_id);
-
-        /* Execute query */
-        const rows = await Database.execute<Gift>({ text: query, values });
-        if (rows.length === 0) { throw new AppError("No gift updated", 404); }
-
-        return rows[0];
-    } catch (error) {
-        throw (error instanceof AppError) ? error : new AppError("Failed to update gifts", 500);
-    }
+    return toGift(rows[0]);
 }
 
 
@@ -97,22 +112,31 @@ export async function updateGifts(giftData: GiftUpdate): Promise<Gift> {
 /* DELETE */
 /*========*/
 /**
- * Delete an gift for a user.
+ * Deletes a gift of a user.
  * @param userId The ID of the user.
  * @param giftId The ID of the gift to delete.
- * @returns The deleted Gift object.
- * @throws AppError if there is an issue deleting the gift.
+ * @returns The deleted gift.
+ * @throws AppError 404 if the user has no gift with this ID.
  */
-export async function deleteGifts(userId: number, giftId: number): Promise<Gift> {
-    try {
-        const query = `DELETE FROM gifts WHERE id = $1 AND user_id = $2 RETURNING *;`;
-        const values = [giftId, userId];
+export async function deleteGift(userId: number, giftId: number): Promise<Gift> {
+    const query = "DELETE FROM gifts WHERE id = $1 AND user_id = $2 RETURNING *;";
 
-        const rows = await Database.execute<Gift>({ text: query, values });
-        if (rows.length === 0) { throw new AppError("No gift deleted", 404); }
+    const rows = await Database.execute<GiftRow>({ text: query, values: [giftId, userId] });
+    if (rows.length === 0) { throw new AppError("No gift deleted", 404); }
 
-        return rows[0];
-    } catch (error) {
-        throw (error instanceof AppError) ? error : new AppError("Failed to delete gifts", 500);
-    }
+    return toGift(rows[0]);
+}
+
+
+
+/*===========*/
+/* UTILITIES */
+/*===========*/
+/**
+ * Converts a row of the gifts table into a gift, with its price as a number.
+ * @param row The row returned by PostgreSQL.
+ * @returns The gift.
+ */
+function toGift(row: GiftRow): Gift {
+    return { ...row, price: Number(row.price) };
 }

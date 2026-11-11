@@ -1,19 +1,13 @@
 import { z } from "zod";
-import * as Schemas from "./gifts.schema";
+import { GiftsInsertSchema, GiftsSchema, GiftsUpdateSchema } from "./gifts.schema";
 
 
 
-/**
- * Type representing a gift object.
- */
-export type Gift = z.infer<typeof Schemas.GiftsSchema>;
+/* SELECT */
+export type Gift = z.infer<typeof GiftsSchema>;
 
-/**
- * Type representing a gift object for insertion.
- */
-export type GiftInsert = z.infer<typeof Schemas.GiftsInsertSchema>;
+/* INSERT */
+export type GiftInsert = z.infer<typeof GiftsInsertSchema>;
 
-/**
- * Type representing a gift object for updating.
- */
-export type GiftUpdate = z.infer<typeof Schemas.GiftsUpdateSchema>;
+/* UPDATE */
+export type GiftUpdate = z.infer<typeof GiftsUpdateSchema>;

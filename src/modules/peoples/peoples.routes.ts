@@ -1,9 +1,9 @@
 import { Router } from "express";
+import * as PeoplesController from "./peoples.controller";
 import { bodyValidator } from "../../core/middlewares/validators/body_validator.middleware";
 import { paramsQueryValidator } from "../../core/middlewares/validators/params_query_validator.middleware";
-import * as PeoplesController from "./peoples.controller";
+import { IdParamsSchema } from "../../core/schemas/common.schema";
 import { PeoplesInsertSchema, PeoplesUpdateSchema } from "./peoples.schema";
-import { IdSchema } from "../../core/schemas/common.schema";
 
 
 
@@ -20,21 +20,19 @@ const router = Router();
  *   get:
  *     tags:
  *       - Peoples
- *     summary: Retrieve a list of peoples of the authenticated user
- *     description: Retrieve a list of peoples associated with the authenticated user.
+ *     summary: Retrieve the people of the authenticated user
+ *     description: Retrieve every person of the authenticated user, in the order of their creation.
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: A list of peoples
+ *         description: The people of the user, an empty array if there are none
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Peoples'
- *       204:
- *         description: No content. No peoples found.
  *       401:
  *         description: Unauthorized access.
  *         content:
@@ -60,8 +58,8 @@ router.get('/', PeoplesController.selectPeoples);
  *   post:
  *     tags:
  *       - Peoples
- *     summary: Create a new people for the authenticated user
- *     description: Create a new people associated with the authenticated user.
+ *     summary: Create a person for the authenticated user
+ *     description: Create a person for the authenticated user. An empty last name is stored as null.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -72,7 +70,7 @@ router.get('/', PeoplesController.selectPeoples);
  *             $ref: '#/components/schemas/PeoplesInsert'
  *     responses:
  *       201:
- *         description: Created people
+ *         description: Created person
  *         content:
  *           application/json:
  *             schema:
@@ -89,6 +87,12 @@ router.get('/', PeoplesController.selectPeoples);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/error401'
+ *       403:
+ *         description: The user has reached the maximum number of people.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error403'
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
@@ -96,7 +100,7 @@ router.get('/', PeoplesController.selectPeoples);
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/', bodyValidator(PeoplesInsertSchema), PeoplesController.insertPeoples);
+router.post('/', bodyValidator(PeoplesInsertSchema), PeoplesController.insertPeople);
 
 
 /*========*/
@@ -108,8 +112,8 @@ router.post('/', bodyValidator(PeoplesInsertSchema), PeoplesController.insertPeo
  *   put:
  *     tags:
  *       - Peoples
- *     summary: Update an existing people for the authenticated user
- *     description: Update an existing people associated with the authenticated user.
+ *     summary: Update a person of the authenticated user
+ *     description: Replace every field of a person of the authenticated user.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -127,7 +131,7 @@ router.post('/', bodyValidator(PeoplesInsertSchema), PeoplesController.insertPeo
  *             $ref: '#/components/schemas/PeoplesUpdate'
  *     responses:
  *       200:
- *         description: Updated people
+ *         description: Updated person
  *         content:
  *           application/json:
  *             schema:
@@ -144,6 +148,12 @@ router.post('/', bodyValidator(PeoplesInsertSchema), PeoplesController.insertPeo
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/error401'
+ *       404:
+ *         description: The user has no person with this ID.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error404'
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
@@ -151,7 +161,7 @@ router.post('/', bodyValidator(PeoplesInsertSchema), PeoplesController.insertPeo
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.put('/:id', paramsQueryValidator(IdSchema), bodyValidator(PeoplesUpdateSchema), PeoplesController.updatePeoples);
+router.put('/:id', paramsQueryValidator(IdParamsSchema), bodyValidator(PeoplesUpdateSchema), PeoplesController.updatePeople);
 
 
 /*========*/
@@ -163,8 +173,8 @@ router.put('/:id', paramsQueryValidator(IdSchema), bodyValidator(PeoplesUpdateSc
  *   delete:
  *     tags:
  *       - Peoples
- *     summary: Delete an existing people for the authenticated user
- *     description: Delete an existing people associated with the authenticated user.
+ *     summary: Delete a person of the authenticated user
+ *     description: Delete a person of the authenticated user, with all its gifts.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -176,7 +186,7 @@ router.put('/:id', paramsQueryValidator(IdSchema), bodyValidator(PeoplesUpdateSc
  *           example: 1
  *     responses:
  *       200:
- *         description: Deleted people
+ *         description: Deleted person
  *         content:
  *           application/json:
  *             schema:
@@ -193,6 +203,12 @@ router.put('/:id', paramsQueryValidator(IdSchema), bodyValidator(PeoplesUpdateSc
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/error401'
+ *       404:
+ *         description: The user has no person with this ID.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error404'
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
@@ -200,7 +216,7 @@ router.put('/:id', paramsQueryValidator(IdSchema), bodyValidator(PeoplesUpdateSc
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.delete('/:id', paramsQueryValidator(IdSchema), PeoplesController.deletePeoples);
+router.delete('/:id', paramsQueryValidator(IdParamsSchema), PeoplesController.deletePeople);
 
 
 

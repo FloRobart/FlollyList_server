@@ -1,49 +1,33 @@
-services:
-  flollylist-db:
-    build:
-      context: ./Database
-      dockerfile: Dockerfile
-    image: flollylist-db:latest
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - db_data:/var/lib/postgresql
-    networks:
-      - flollylist-net
-    security_opt:
-      - no-new-privileges:true
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} || exit 1"]
-      interval: 5s
-      timeout: 30s
-      retries: 5
+# Development only: the API runs from the local sources with nodemon, and reaches the development
+# database of flollylist-database through the flollylist-net network.
+# Start that database first, from the folder of flollylist-database:
+#   docker compose -f docker-compose.dev.yml up -d
 
-  flollylist-server:
+services:
+  flollylist-api:
     image: node:24-alpine
     working_dir: /app
     env_file: .env
-    depends_on:
-      flollylist-db:
-        condition: service_healthy
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      # Inside the container, "localhost" would be the container itself
+      AUTH_APP_URL: http://host.docker.internal:26001
+    extra_hosts:
+      - host.docker.internal:host-gateway
     volumes:
       - ./:/app/
-    command: sh -c "cd /app && npm run dev"
-    networks:
-      - flower-garden-net
-      - flollylist-net
+    command: ["npm", "run", "dev"]
     ports:
-      - ${APP_PORT:-}:80
-    user: "1800:1800"
-    tmpfs:
-      - /tmp:exec,nosuid,nodev
-
-volumes:
-  db_data:
+      - 127.0.0.1:${APP_PORT:-26005}:80
+    networks:
+      - flollylist-net
+    # Same user as the files of the sources, which nodemon only reads
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    security_opt:
+      - no-new-privileges:true
 
 networks:
-  flower-garden-net:
-    external: true
+  # Created by the docker-compose.dev.yml of flollylist-database
   flollylist-net:
-    driver: bridge
+    name: flollylist-net
+    external: true
