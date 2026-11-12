@@ -4,7 +4,7 @@
 
 Si vous découvrez une faille de sécurité, **ne la signalez pas dans une issue publique** : elle serait visible par tous avant d'être corrigée.
 
-Écrivez plutôt à l'adresse [florobart.github@gmail.com](mailto:florobart.github@gmail.com?subject=%5BS%C3%A9curit%C3%A9%5D%20FlollyList), avec un objet qui commence par « [Sécurité] », en indiquant :
+Écrivez plutôt à l'adresse [florobart.github@gmail.com](mailto:florobart.github@gmail.com?subject=%5BS%C3%A9curit%C3%A9%5D%20HollyList), avec un objet qui commence par « [Sécurité] », en indiquant :
 
 - le service concerné (application, API...) ;
 - la faille et ce qu'elle permet de faire ;

@@ -1,11 +1,11 @@
-# FlollyList — API
+# HollyList — API
 
 # Table des matières
 
 <details>
 <summary>Expand contents</summary>
 
-- [FlollyList — API](#flollylist--api)
+- [HollyList — API](#hollylist--api)
 - [Table des matières](#table-des-matières)
 - [Présentation](#présentation)
 - [Fonctionnalités](#fonctionnalités)
@@ -22,9 +22,9 @@
 
 # Présentation
 
-FlollyList est une application qui permet de gérer facilement les cadeaux à offrir à ses proches : la liste de ses proches, et pour chacun les cadeaux de chaque année, avec leur prix.
+HollyList est une application qui permet de gérer facilement les cadeaux à offrir à ses proches : la liste de ses proches, et pour chacun les cadeaux de chaque année, avec leur prix.
 
-Ce dépôt est son API REST. Elle ne contient rien sur la base de données, qui vit dans `flollylist-database` (migrations, image de migrations, rôle de l'API), ni sur l'authentification, assurée par [Floraccess](https://github.com/FloRobart/FlorAccess_server).
+Ce dépôt est son API REST. Elle ne contient rien sur la base de données, qui vit dans `hollylist-database` (migrations, image de migrations, rôle de l'API), ni sur l'authentification, assurée par [Floraccess](https://github.com/FloRobart/FlorAccess_server).
 
 # Fonctionnalités
 
@@ -63,7 +63,7 @@ Pour signaler une faille : voir [SECURITY.md](SECURITY.md).
 
 # Développement
 
-1. Démarrer la base de développement, depuis le dossier de `flollylist-database` (voir son README) :
+1. Démarrer la base de développement, depuis le dossier de `hollylist-database` (voir son README) :
 
     ```bash
     docker compose -f docker-compose.dev.yml up -d
@@ -90,7 +90,7 @@ Pour signaler une faille : voir [SECURITY.md](SECURITY.md).
 - API : <http://localhost:26005>
 - Documentation Swagger : <http://localhost:26005/api-docs>
 
-L'API joint la base par le réseau `flollylist-net`, et Floraccess sur le port `26001` de la machine (`host.docker.internal`). L'application web de développement doit être sur <http://localhost:26006>, sinon ajouter son adresse à `CORS_ALLOWED_ORIGINS`.
+L'API joint la base par le réseau `hollylist-net`, et Floraccess sur le port `26001` de la machine (`host.docker.internal`). L'application web de développement doit être sur <http://localhost:26006>, sinon ajouter son adresse à `CORS_ALLOWED_ORIGINS`.
 
 # Tests
 
@@ -102,17 +102,17 @@ npm test
 npm run typecheck
 ```
 
-La CI ([Github-ci](https://github.com/FloRobart/github-ci)) lance `lint`, `format:check`, `typecheck` et `test` sur chaque pull request, puis construit l'image Docker. À chaque merge sur `main`, elle publie l'image `florobart/flollylist-api` (`<version>` et `latest`) sur Docker Hub et GHCR.
+La CI ([Github-ci](https://github.com/FloRobart/github-ci)) lance `lint`, `format:check`, `typecheck` et `test` sur chaque pull request, puis construit l'image Docker. À chaque merge sur `main`, elle publie l'image `florobart/hollylist-api` (`<version>` et `latest`) sur Docker Hub et GHCR.
 
 # Production
 
-L'API est déployée par `flollylist-wrapper`, avec la base, les migrations, l'application web et Traefik : voir son README. Elle se connecte avec le rôle `flollylist_api`, jamais avec le propriétaire de la base.
+L'API est déployée par `hollylist-wrapper`, avec la base, les migrations, l'application web et Traefik : voir son README. Elle se connecte avec le rôle `hollylist_api`, jamais avec le propriétaire de la base.
 
 Le [docker-compose.yml](docker-compose.yml) de ce dépôt est celui de production : il ne publie aucun port et lit son mot de passe dans `secrets/db_password`.
 
 # Auteur
 
-FlollyList est un projet open-source développé uniquement par [Floris Robart](https://florobart.github.io/)
+HollyList est un projet open-source développé uniquement par [Floris Robart](https://florobart.github.io/)
 
 # Report de bug et suggestions
 
@@ -122,4 +122,4 @@ Si vous avez une **suggestion**, une **idée**, une **amélioration**, ou une **
 
 # License
 
-FlollyList est un projet open-source sous licence [GNU General Public License v3.0](https://opensource.org/licenses/GPL-3.0).
+HollyList est un projet open-source sous licence [GNU General Public License v3.0](https://opensource.org/licenses/GPL-3.0).

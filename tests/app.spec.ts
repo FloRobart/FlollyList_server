@@ -22,7 +22,7 @@ const AUTHORIZATION_HEADER = 'Bearer header.payload.signature';
 
 const USER_FROM_AUTHENTICATION_SERVER = {
     id: 42,
-    email: 'user@flollylist.fr',
+    email: 'user@hollylist.fr',
     pseudo: 'user',
     auth_methods_id: 1,
     is_connected: true,

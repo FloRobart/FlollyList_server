@@ -30,11 +30,11 @@ describe('AppConfig secrets tests', () => {
         delete process.env.DB_PASSWORD_FILE;
 
         process.env.DB_SCHEME = 'postgresql';
-        process.env.DB_USER = 'flollylist';
-        process.env.DB_HOST = 'flollylist-database';
-        process.env.DB_NAME = 'flollylist';
+        process.env.DB_USER = 'hollylist';
+        process.env.DB_HOST = 'hollylist-database';
+        process.env.DB_NAME = 'hollylist';
 
-        temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'flollylist-secrets-'));
+        temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'hollylist-secrets-'));
     });
 
 
@@ -47,7 +47,7 @@ describe('AppConfig secrets tests', () => {
     it('Reads the database password from the variable when no file is given', () => {
         process.env.DB_PASSWORD = 'from-variable';
 
-        expect(loadAppConfig().db_uri).toBe('postgresql://flollylist:from-variable@flollylist-database:5432/flollylist');
+        expect(loadAppConfig().db_uri).toBe('postgresql://hollylist:from-variable@hollylist-database:5432/hollylist');
     });
 
 
@@ -55,7 +55,7 @@ describe('AppConfig secrets tests', () => {
         process.env.DB_PASSWORD = 'from-variable';
         process.env.DB_PASSWORD_FILE = writeSecretFile('from-file\n');
 
-        expect(loadAppConfig().db_uri).toBe('postgresql://flollylist:from-file@flollylist-database:5432/flollylist');
+        expect(loadAppConfig().db_uri).toBe('postgresql://hollylist:from-file@hollylist-database:5432/hollylist');
     });
 
 

@@ -59,7 +59,7 @@ function readSecret(name: string): string {
 
 const config: AppConfigInterface = {
     /* Application configuration */
-    app_name: "FlollyList",
+    app_name: "HollyList",
     app_port: 80,
     host_name: process.env.HOST_NAME || 'localhost',
     base_url: process.env.BASE_URL || 'http://localhost:80',

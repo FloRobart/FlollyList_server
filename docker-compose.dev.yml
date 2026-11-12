@@ -1,10 +1,10 @@
 # Development only: the API runs from the local sources with nodemon, and reaches the development
-# database of flollylist-database through the flollylist-net network.
-# Start that database first, from the folder of flollylist-database:
+# database of hollylist-database through the hollylist-net network.
+# Start that database first, from the folder of hollylist-database:
 #   docker compose -f docker-compose.dev.yml up -d
 
 services:
-  flollylist-api:
+  hollylist-api:
     image: node:24-alpine
     working_dir: /app
     env_file: .env
@@ -20,14 +20,14 @@ services:
     ports:
       - 127.0.0.1:${APP_PORT:-26005}:80
     networks:
-      - flollylist-net
+      - hollylist-net
     # Same user as the files of the sources, which nodemon only reads
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     security_opt:
       - no-new-privileges:true
 
 networks:
-  # Created by the docker-compose.dev.yml of flollylist-database
-  flollylist-net:
-    name: flollylist-net
+  # Created by the docker-compose.dev.yml of hollylist-database
+  hollylist-net:
+    name: hollylist-net
     external: true

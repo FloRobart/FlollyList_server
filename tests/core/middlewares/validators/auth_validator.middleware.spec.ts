@@ -14,7 +14,7 @@ const VALID_AUTHORIZATION_HEADER = 'Bearer header.payload.signature';
 
 const USER_FROM_AUTHENTICATION_SERVER = {
     id: 42,
-    email: 'user@flollylist.fr',
+    email: 'user@hollylist.fr',
     pseudo: 'user',
     auth_methods_id: 1,
     is_connected: true,
@@ -31,7 +31,7 @@ const USER_FROM_AUTHENTICATION_SERVER = {
 describe('Authorization middleware tests', () => {
     it('Takes the user from the authentication server, never from the body sent by the client', async () => {
         axiosGetMock.mockResolvedValue({ status: 200, data: USER_FROM_AUTHENTICATION_SERVER });
-        const request = buildRequest(VALID_AUTHORIZATION_HEADER, { user: { id: 1, email: 'victim@flollylist.fr' } });
+        const request = buildRequest(VALID_AUTHORIZATION_HEADER, { user: { id: 1, email: 'victim@hollylist.fr' } });
         const next = jest.fn();
 
         await authorizationValidator(request, {} as Response, next);
