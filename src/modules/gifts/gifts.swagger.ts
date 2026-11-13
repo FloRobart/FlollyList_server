@@ -12,6 +12,7 @@
  *         - gift_name
  *         - gift_description
  *         - gift_year
+ *         - price
  *         - link
  *         - people_id
  *         - user_id
@@ -23,39 +24,36 @@
  *           example: 1
  *         gift_name:
  *           type: string
- *           example: "Chocolate Box"
+ *           example: "Puzzle 1000 pièces"
  *         gift_description:
- *           oneOf:
- *             - type: string
- *               example: "A box of assorted chocolates."
- *               description: "A brief description of the gift."
- *             - type: 'null'
+ *           type: string
+ *           nullable: true
+ *           example: "Un paysage de montagne"
  *         gift_year:
- *           oneOf:
- *             - type: integer
- *               example: 2025
- *               description: "The year the gift is intended for."
- *             - type: 'null'
+ *           type: integer
+ *           nullable: true
+ *           example: 2026
+ *         price:
+ *           type: number
+ *           example: 24.99
  *         link:
- *           oneOf:
- *             - type: string
- *               example: "http://example.com/chocolate-box"
- *               description: "A URL to the gift."
- *             - type: 'null'
+ *           type: string
+ *           nullable: true
+ *           example: "https://example.com/puzzle"
  *         people_id:
  *           type: integer
- *           example: 2
+ *           example: 1
  *         user_id:
  *           type: integer
  *           example: 1
  *         created_at:
  *           type: string
- *           format: "YYYY-MM-DDTHH:mm:ss[.sss][Z]"
- *           example: "2024-01-01T00:00:00.000Z"
+ *           format: date-time
+ *           example: "2026-01-01T00:00:00.000Z"
  *         updated_at:
  *           type: string
- *           format: "YYYY-MM-DDTHH:mm:ss[.sss][Z]"
- *           example: "2024-01-01T00:00:00.000Z"
+ *           format: date-time
+ *           example: "2026-01-01T00:00:00.000Z"
  */
 
 
@@ -74,28 +72,37 @@
  *       properties:
  *         gift_name:
  *           type: string
- *           example: "Chocolate Box"
+ *           minLength: 1
+ *           maxLength: 255
+ *           example: "Puzzle 1000 pièces"
  *         gift_description:
- *           oneOf:
- *             - type: string
- *               example: "A box of assorted chocolates."
- *               description: "A brief description of the gift."
- *             - type: 'null'
+ *           type: string
+ *           nullable: true
+ *           maxLength: 2000
+ *           description: Empty or missing means no description
+ *           example: "Un paysage de montagne"
  *         gift_year:
- *           oneOf:
- *             - type: integer
- *               example: 2025
- *               description: "The year the gift is intended for."
- *             - type: 'null'
+ *           type: integer
+ *           nullable: true
+ *           minimum: 1900
+ *           maximum: 2200
+ *           example: 2026
+ *         price:
+ *           type: number
+ *           minimum: 0
+ *           maximum: 9999999999.99
+ *           description: 0 when missing
+ *           example: 24.99
  *         link:
- *           oneOf:
- *             - type: string
- *               example: "http://example.com/chocolate-box"
- *               description: "A URL to the gift."
- *             - type: 'null'
+ *           type: string
+ *           nullable: true
+ *           maxLength: 2048
+ *           description: Empty or missing means no link
+ *           example: "https://example.com/puzzle"
  *         people_id:
  *           type: integer
- *           example: 2
+ *           description: One of the people of the user
+ *           example: 1
  */
 
 
@@ -107,54 +114,5 @@
  * components:
  *   schemas:
  *     GiftsUpdate:
- *       type: object
- *       required:
- *         - id
- *         - gift_name
- *         - gift_description
- *         - gift_year
- *         - link
- *         - people_id
- *         - user_id
- *         - created_at
- *         - updated_at
- *       properties:
- *         id:
- *           type: integer
- *           example: 1
- *         gift_name:
- *           type: string
- *           example: "Chocolate Box"
- *         gift_description:
- *           oneOf:
- *             - type: string
- *               example: "A box of assorted chocolates."
- *               description: "A brief description of the gift."
- *             - type: 'null'
- *         gift_year:
- *           oneOf:
- *             - type: integer
- *               example: 2025
- *               description: "The year the gift is intended for."
- *             - type: 'null'
- *         link:
- *           oneOf:
- *             - type: string
- *               example: "http://example.com/chocolate-box"
- *               description: "A URL to the gift."
- *             - type: 'null'
- *         people_id:
- *           type: integer
- *           example: 2
- *         user_id:
- *           type: integer
- *           example: 1
- *         created_at:
- *           type: string
- *           format: "YYYY-MM-DDTHH:mm:ss[.sss][Z]"
- *           example: "2024-01-01T00:00:00.000Z"
- *         updated_at:
- *           type: string
- *           format: "YYYY-MM-DDTHH:mm:ss[.sss][Z]"
- *           example: "2024-01-01T00:00:00.000Z"
+ *       $ref: '#/components/schemas/GiftsInsert'
  */

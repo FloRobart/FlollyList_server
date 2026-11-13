@@ -1,9 +1,12 @@
-import type { Gift, GiftInsert, GiftUpdate } from './gifts.types';
-
-import { ZodError } from 'zod';
 import { AppError } from '../../core/models/AppError.model';
 import * as GiftsRepository from './gifts.repository';
 import { GiftsSchema } from './gifts.schema';
+import { Gift, GiftInsert, GiftUpdate } from './gifts.types';
+
+
+
+/* Far above the needs of a family over many years: only there so that a single account cannot fill the database */
+export const MAX_GIFTS_PER_USER = 10_000;
 
 
 
@@ -11,18 +14,18 @@ import { GiftsSchema } from './gifts.schema';
 /* SELECT */
 /*========*/
 /**
- * Get all gifts for a user.
+ * Gets all the gifts of a user.
  * @param userId The ID of the user.
- * @returns An array of Gift objects.
- * @throws AppError if there is an issue retrieving the gifts.
+ * @returns The gifts of the user.
+ * @throws AppError if the gifts cannot be retrieved.
  */
 export async function selectGifts(userId: number): Promise<Gift[]> {
-    try {
-        const gifts = await GiftsRepository.selectGifts(userId);
-        return GiftsSchema.array().parse(gifts);
-    } catch (error) {
-        throw (error instanceof ZodError) ? new AppError("Failed to parse gifts", 500) : error;
-    }
+    const gifts = await GiftsRepository.selectGifts(userId);
+
+    const parsedGifts = GiftsSchema.array().safeParse(gifts);
+    if (!parsedGifts.success) { throw new AppError("Failed to parse gifts", 500); }
+
+    return parsedGifts.data;
 }
 
 
@@ -30,19 +33,17 @@ export async function selectGifts(userId: number): Promise<Gift[]> {
 /* INSERT */
 /*========*/
 /**
- * Insert a new gift for a user.
- * @param giftData The gift data to insert.
- * @returns The newly created Gift object.
- * @throws AppError if there is an issue inserting the gift.
+ * Creates a gift for a person of a user.
+ * @param userId The ID of the user.
+ * @param gift The gift to create.
+ * @returns The created gift.
+ * @throws AppError 403 if the user already has MAX_GIFTS_PER_USER gifts, 404 if the person is not one of its people.
  */
-export async function insertGifts(giftData: GiftInsert): Promise<Gift> {
-    try {
-        const gifts = await GiftsRepository.insertGifts(giftData);
-        return GiftsSchema.parse(gifts);
-    } catch (error) {
-        console.debug("Insert gift error:", error);
-        throw (error instanceof ZodError) ? new AppError("Failed to parse gift (gift inserted successfully)", 500) : error;
-    }
+export async function insertGift(userId: number, gift: GiftInsert): Promise<Gift> {
+    await checkGiftsLimit(userId);
+
+    const insertedGift = await GiftsRepository.insertGift(userId, gift);
+    return parseGift(insertedGift, "inserted");
 }
 
 
@@ -50,17 +51,16 @@ export async function insertGifts(giftData: GiftInsert): Promise<Gift> {
 /* UPDATE */
 /*========*/
 /**
- * Update an existing gift for a user.
- * @param giftData The gift data to update.
- * @returns The updated Gift object.
+ * Replaces the fields of a gift of a user.
+ * @param userId The ID of the user.
+ * @param giftId The ID of the gift to update.
+ * @param gift The new fields of the gift.
+ * @returns The updated gift.
+ * @throws AppError 404 if the user has no gift with this ID, or no person with the ID of the gift.
  */
-export async function updateGifts(giftData: GiftUpdate): Promise<Gift> {
-    try {
-        const gifts = await GiftsRepository.updateGifts(giftData);
-        return GiftsSchema.parse(gifts);
-    } catch (error) {
-        throw (error instanceof ZodError) ? new AppError("Failed to parse gift (gift updated successfully)", 500) : error;
-    }
+export async function updateGift(userId: number, giftId: number, gift: GiftUpdate): Promise<Gift> {
+    const updatedGift = await GiftsRepository.updateGift(userId, giftId, gift);
+    return parseGift(updatedGift, "updated");
 }
 
 
@@ -68,17 +68,44 @@ export async function updateGifts(giftData: GiftUpdate): Promise<Gift> {
 /* DELETE */
 /*========*/
 /**
- * Delete an gift for a user.
+ * Deletes a gift of a user.
  * @param userId The ID of the user.
  * @param giftId The ID of the gift to delete.
- * @returns The deleted Gift object.
- * @throws AppError if there is an issue deleting the gift.
+ * @returns The deleted gift.
+ * @throws AppError 404 if the user has no gift with this ID.
  */
-export async function deleteGifts(userId: number, giftId: number): Promise<Gift> {
-    try {
-        const gifts = await GiftsRepository.deleteGifts(userId, giftId);
-        return GiftsSchema.parse(gifts);
-    } catch (error) {
-        throw (error instanceof ZodError) ? new AppError("Failed to parse gift (gift deleted successfully)", 500) : error;
-    }
+export async function deleteGift(userId: number, giftId: number): Promise<Gift> {
+    const deletedGift = await GiftsRepository.deleteGift(userId, giftId);
+    return parseGift(deletedGift, "deleted");
+}
+
+
+
+/*===========*/
+/* UTILITIES */
+/*===========*/
+/**
+ * Refuses a new gift to a user who already has MAX_GIFTS_PER_USER gifts.
+ * @param userId The ID of the user.
+ * @throws AppError 403 if the user has reached the limit.
+ */
+async function checkGiftsLimit(userId: number): Promise<void> {
+    const giftsCount = await GiftsRepository.countGifts(userId);
+    if (giftsCount < MAX_GIFTS_PER_USER) return;
+
+    throw new AppError(`A user cannot have more than ${MAX_GIFTS_PER_USER} gifts`, 403);
+}
+
+/**
+ * Checks a gift written in the database, before it is sent to the client.
+ * @param gift The gift returned by the repository.
+ * @param action What was done to the gift, for the error message.
+ * @returns The checked gift.
+ * @throws AppError 500 if the gift does not match the schema, although the write succeeded.
+ */
+function parseGift(gift: Gift, action: string): Gift {
+    const parsedGift = GiftsSchema.safeParse(gift);
+    if (!parsedGift.success) { throw new AppError(`Failed to parse gift (gift ${action} successfully)`, 500); }
+
+    return parsedGift.data;
 }

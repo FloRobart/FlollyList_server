@@ -1,7 +1,6 @@
-import type { PeopleInsert, PeopleUpdate } from './peoples.types';
-
 import { Request, Response, NextFunction } from 'express';
 import * as PeoplesService from './peoples.service';
+import { PeopleInsert, PeopleUpdate } from './peoples.types';
 
 
 
@@ -9,9 +8,9 @@ import * as PeoplesService from './peoples.service';
 /* SELECT */
 /*========*/
 /**
- * Get all peoples for a user.
- * @param req.body.user The user object containing the user ID.
- * @param res The response object.
+ * Gets all the people of the user.
+ * @param req.body.user The user, added by the authorization middleware.
+ * @param res The response: 200 with the people, an empty array if there are none.
  * @param next The next middleware function.
  */
 export const selectPeoples = async (req: Request, res: Response, next: NextFunction) => {
@@ -19,7 +18,7 @@ export const selectPeoples = async (req: Request, res: Response, next: NextFunct
         const userId: number = req.body.user.id;
 
         const peoples = await PeoplesService.selectPeoples(userId);
-        res.status(peoples.length ? 200 : 204).json(peoples);
+        res.status(200).json(peoples);
     } catch (error) {
         next(error);
     }
@@ -30,18 +29,19 @@ export const selectPeoples = async (req: Request, res: Response, next: NextFunct
 /* INSERT */
 /*========*/
 /**
- * Insert a new people for a user.
- * @param req.body.user The user object containing the user ID.
- * @param req.body.validatedData.body The validated people data to insert.
- * @param res The response object.
+ * Creates a person for the user.
+ * @param req.body.user The user, added by the authorization middleware.
+ * @param req.body.validatedData.body The validated person to create.
+ * @param res The response: 201 with the created person.
  * @param next The next middleware function.
  */
-export const insertPeoples = async (req: Request, res: Response, next: NextFunction) => {
+export const insertPeople = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const peopleData: PeopleInsert = { ...req.body.validatedData.body, user_id: req.body.user.id };
+        const userId: number = req.body.user.id;
+        const people: PeopleInsert = req.body.validatedData.body;
 
-        const newPeople = await PeoplesService.insertPeoples(peopleData);
-        res.status(201).json(newPeople);
+        const insertedPeople = await PeoplesService.insertPeople(userId, people);
+        res.status(201).json(insertedPeople);
     } catch (error) {
         next(error);
     }
@@ -52,18 +52,21 @@ export const insertPeoples = async (req: Request, res: Response, next: NextFunct
 /* UPDATE */
 /*========*/
 /**
- * Update an existing people for a user.
- * @param req.body.user The user object containing the user ID.
- * @param req.body.validatedData.body The validated people data to update.
- * @param res The response object.
+ * Replaces the fields of a person of the user.
+ * @param req.body.user The user, added by the authorization middleware.
+ * @param req.body.validatedData.params.id The ID of the person to update.
+ * @param req.body.validatedData.body The validated new fields of the person.
+ * @param res The response: 200 with the updated person.
  * @param next The next middleware function.
  */
-export const updatePeoples = async (req: Request, res: Response, next: NextFunction) => {
+export const updatePeople = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const peopleData: PeopleUpdate = { ...req.body.validatedData.body, id: req.body.validatedData.params.id, user_id: req.body.user.id };
+        const userId: number = req.body.user.id;
+        const peopleId: number = req.body.validatedData.params.id;
+        const people: PeopleUpdate = req.body.validatedData.body;
 
-        const peoples = await PeoplesService.updatePeoples(peopleData);
-        res.status(200).json(peoples);
+        const updatedPeople = await PeoplesService.updatePeople(userId, peopleId, people);
+        res.status(200).json(updatedPeople);
     } catch (error) {
         next(error);
     }
@@ -74,19 +77,19 @@ export const updatePeoples = async (req: Request, res: Response, next: NextFunct
 /* DELETE */
 /*========*/
 /**
- * Delete an people for a user.
- * @param req.body.user The user object containing the user ID.
- * @param req.body.validatedData.params.id The ID of the people to delete.
- * @param res The response object.
+ * Deletes a person of the user, with all its gifts.
+ * @param req.body.user The user, added by the authorization middleware.
+ * @param req.body.validatedData.params.id The ID of the person to delete.
+ * @param res The response: 200 with the deleted person.
  * @param next The next middleware function.
  */
-export const deletePeoples = async (req: Request, res: Response, next: NextFunction) => {
+export const deletePeople = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId: number = req.body.user.id;
         const peopleId: number = req.body.validatedData.params.id;
 
-        const peoples = await PeoplesService.deletePeoples(userId, peopleId);
-        res.status(200).json(peoples);
+        const deletedPeople = await PeoplesService.deletePeople(userId, peopleId);
+        res.status(200).json(deletedPeople);
     } catch (error) {
         next(error);
     }

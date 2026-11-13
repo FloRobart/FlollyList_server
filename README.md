@@ -1,101 +1,125 @@
-# FlollyList server
+# HollyList — API
 
-# Table des matière
+# Table des matières
 
-- [FlollyList server](#flollylist-server)
-- [Table des matière](#table-des-matière)
+<details>
+<summary>Expand contents</summary>
+
+- [HollyList — API](#hollylist--api)
+- [Table des matières](#table-des-matières)
 - [Présentation](#présentation)
 - [Fonctionnalités](#fonctionnalités)
-- [Installation](#installation)
-  - [Pour le développement](#pour-le-développement)
-  - [Pour la production](#pour-la-production)
+- [Sécurité](#sécurité)
+- [Technologies utilisées](#technologies-utilisées)
+- [Développement](#développement)
+- [Tests](#tests)
+- [Production](#production)
 - [Auteur](#auteur)
 - [Report de bug et suggestions](#report-de-bug-et-suggestions)
 - [License](#license)
 
+</details>
+
 # Présentation
 
-FlollyList server est le serveur backend de l'application FlollyList. Il fournit une API RESTful pour gérer les données des utilisateurs, à savoir la liste des proches d'un utilisateur ainsi que tous les cadeaux associés à chaque proche.
+HollyList est une application qui permet de gérer facilement les cadeaux à offrir à ses proches : la liste de ses proches, et pour chacun les cadeaux de chaque année, avec leur prix.
+
+Ce dépôt est son API REST. Elle ne contient rien sur la base de données, qui vit dans `hollylist-database` (migrations, image de migrations, rôle de l'API), ni sur l'authentification, assurée par [Floraccess](https://github.com/FloRobart/FlorAccess_server).
 
 # Fonctionnalités
 
-- [x] Ajouter des proches
-- [x] Modifier des proches
-- [x] Supprimer des proches
-- [x] Ajouter des cadeaux à un proche
-- [x] Modifier des cadeaux
-- [x] Supprimer des cadeaux
-- [x] Authentification des utilisateurs à l'aide de JWT [FlorAccess](https://github.com/FloRobart/FlorAccess_server)
+| Route | Rôle |
+|---|---|
+| `GET /peoples` | Les proches de l'utilisateur |
+| `POST /peoples` | Ajouter un proche |
+| `PUT /peoples/:id` | Modifier un proche |
+| `DELETE /peoples/:id` | Supprimer un proche, avec tous ses cadeaux |
+| `GET /gifts` | Les cadeaux de l'utilisateur, pour tous ses proches |
+| `POST /gifts` | Ajouter un cadeau à un proche |
+| `PUT /gifts/:id` | Modifier un cadeau, ou le passer à un autre proche |
+| `DELETE /gifts/:id` | Supprimer un cadeau |
 
-# Installation
+Une liste vide est renvoyée en `200` avec `[]`. En développement, toute la documentation est sur `/api-docs` (Swagger).
 
-## Pour le développement
+# Sécurité
 
-1. Cloner le dépôt GitHub
+- **L'utilisateur vient toujours de Floraccess.** Chaque requête envoie le JWT à Floraccess (`GET /users`, 5 secondes au plus), et l'API ne lit jamais d'utilisateur dans le corps de la requête.
+- **Un utilisateur n'atteint que ses propres données.** Chaque requête SQL filtre sur son `user_id`. Un cadeau ne peut être rattaché qu'à un proche du même utilisateur : la requête le vérifie, et la base le garantit une seconde fois par une clé étrangère sur `(people_id, user_id)`.
+- **Le rôle de base de données de l'API ne peut que lire et écrire des lignes.** Une injection SQL ne pourrait ni modifier le schéma ni toucher aux migrations. Toutes les requêtes sont paramétrées.
+- **Les entrées sont validées par zod**, et les sorties aussi, avant d'être envoyées. Les messages d'erreur inattendus ne sont jamais renvoyés au client.
+- **Limites** : un nombre de requêtes par IP, 500 proches et 10 000 cadeaux par utilisateur, pour qu'un seul compte ne puisse pas remplir la base.
+- **En production** : image sans shell ni npm, système de fichiers en lecture seule, utilisateur non-root, aucun port publié (Traefik seul l'atteint), mot de passe de la base lu depuis un secret Docker, Swagger désactivé, en-têtes de sécurité (Helmet).
 
-  ```bash
-  git clone https://github.com/FloRobart/FlollyList_server.git
-  ```
+Pour signaler une faille : voir [SECURITY.md](SECURITY.md).
 
-2. Accéder au répertoire du projet
+# Technologies utilisées
 
-  ```bash
-  cd FlollyList_server
-  ```
+- Langage : [TypeScript](https://www.typescriptlang.org/), sur [Node.js](https://nodejs.org/) 24
+- Framework : [ExpressJS](https://www.npmjs.com/package/express) 5
+- Validation : [zod](https://zod.dev/)
+- Base de données : [PostgreSQL](https://www.postgresql.org/) 18, avec [node postgres](https://www.npmjs.com/package/pg)
+- Tests : [Jest](https://jestjs.io/)
+- Déploiement : [Docker](https://www.docker.com/), images [Docker Hardened Images](https://www.docker.com/products/hardened-images/)
 
-3. Installer les dépendances
+# Développement
 
-  ```bash
-  npm install
-  ```
+1. Démarrer la base de développement, depuis le dossier de `hollylist-database` (voir son README) :
 
-4. Créer un fichier `.env` à la racine du projet et y ajouter les variables d'environnement nécessaires (vous pouvez vous baser sur le fichier `.env.example`)
+    ```bash
+    docker compose -f docker-compose.dev.yml up -d
+    ```
 
-  ```bash
-  cp .env.example .env
-  ```
+2. Dans ce dépôt, créer le fichier d'environnement :
 
-5. Démarrer le serveur en mode développement
+    ```bash
+    cp .env.example .env
+    ```
 
-  ```bash
-  npm run dev-docker
-  ```
+3. Installer les dépendances :
 
-6. Le serveur devrait maintenant être accessible à l'adresse `http://localhost:26004`
-7. Accéder à la documentation de l'API via Swagger à l'adresse `http://localhost:26004/api-docs`
+    ```bash
+    npm install
+    ```
 
-## Pour la production
+4. Démarrer l'API, qui se recharge à chaque modification de `src/` :
 
-1. Récupérer les images Docker depuis [Docker Hub](https://hub.docker.com/u/florobart) ou depuis [GitHub Container Registry](https://github.com/FloRobart?tab=packages&repo_name=FlollyList_server)
+    ```bash
+    npm run dev-docker
+    ```
 
-  ```bash
-  docker pull florobart/flollylist_server-server:latest
-  docker pull florobart/flollylist_server-db:latest
-  ```
-  
-2. Créer un fichier `.env` à la racine du projet et y ajouter les variables d'environnement nécessaires (vous pouvez vous baser sur le fichier `.env.example`)
+- API : <http://localhost:26005>
+- Documentation Swagger : <http://localhost:26005/api-docs>
 
-  ```bash
-  touch .env
-  nano .env
-  ```
+L'API joint la base par le réseau `hollylist-net`, et Floraccess sur le port `26001` de la machine (`host.docker.internal`). L'application web de développement doit être sur <http://localhost:26006>, sinon ajouter son adresse à `CORS_ALLOWED_ORIGINS`.
 
-3. Copier le fichier `docker-compose.yml` à la racine du projet et lancer les conteneurs Docker
+# Tests
 
 ```bash
-docker-compose up -d
+npm test
 ```
+
+```bash
+npm run typecheck
+```
+
+La CI ([Github-ci](https://github.com/FloRobart/github-ci)) lance `lint`, `format:check`, `typecheck` et `test` sur chaque pull request, puis construit l'image Docker. À chaque merge sur `main`, elle publie l'image `florobart/hollylist-api` (`<version>` et `latest`) sur Docker Hub et GHCR.
+
+# Production
+
+L'API est déployée par `hollylist-wrapper`, avec la base, les migrations, l'application web et Traefik : voir son README. Elle se connecte avec le rôle `hollylist_api`, jamais avec le propriétaire de la base.
+
+Le [docker-compose.yml](docker-compose.yml) de ce dépôt est celui de production : il ne publie aucun port et lit son mot de passe dans `secrets/db_password`.
 
 # Auteur
 
-FlollyList server est un projet open-source développé uniquement par [Floris Robart](https://florobart.github.io/)
+HollyList est un projet open-source développé uniquement par [Floris Robart](https://florobart.github.io/)
 
 # Report de bug et suggestions
 
-Si vous découvrez une erreur, quelquelle soit, cela peut êgre une faute de frappe ou d'orthographe, une erreur de calcul, une erreur de conception, un bug qui empêche le bon fonctionnement de l'application, ou tout autre problème, Merci de me le signaler par email à l'adresse [florobart.github@gmail.com](mailto:florobart.github@gmail.com). Toutes les erreurs, quelque soit leur nature ou leur importance, seront traitées le plus rapidement possible.
+Si vous découvrez une erreur, quelle qu'elle soit, cela peut être une faute de frappe ou d'orthographe, une erreur de calcul, une erreur de conception, un bug qui empêche le bon fonctionnement de l'application, ou tout autre problème, merci de me la signaler par mail à l'adresse [florobart.github@gmail.com](mailto:florobart.github@gmail.com). Toutes les erreurs, quelle que soit leur nature ou leur importance, seront traitées le plus rapidement possible.
 
-Si vous avez une une **suggestion**, une **idée**, une **amélioration**, ou une **demande de fonctionnalité**, merci de me la communiquer par email à l'adresse [florobart.github@gmail.com](mailto:florobart.github@gmail.com). Toutes les suggestions, quelque soit leur nature ou leur importance, seront étudiées et prises en compte dans la mesure du possible.
+Si vous avez une **suggestion**, une **idée**, une **amélioration**, ou une **demande de fonctionnalité**, merci de me la communiquer par mail à l'adresse [florobart.github@gmail.com](mailto:florobart.github@gmail.com). Toutes les suggestions, quelle que soit leur nature ou leur importance, seront étudiées et prises en compte dans la mesure du possible.
 
 # License
 
-FlollyList server est un projet open-source sous licence [GNU General Public License v3.0](https://opensource.org/licenses/GPL-3.0).
+HollyList est un projet open-source sous licence [GNU General Public License v3.0](https://opensource.org/licenses/GPL-3.0).
