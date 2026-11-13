@@ -1,6 +1,6 @@
 {
   "name": "hollylist-api",
-  "version": "1.3.2",
+  "version": "2.0.0",
   "description": "HollyList est une application web qui permet de gérer facilement les cadeaux à offrir à ses proches.",
   "main": "src/server.ts",
   "scripts": {
