@@ -1,23 +1,21 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodType } from "zod";
 import { AppError } from "../../models/AppError.model";
-import * as logger from "../../utils/logger";
 
 
 
 /**
- * Middleware générique de validation du corps de la requête avec Zod.
- * @param schema Schéma Zod à utiliser pour la validation.
- * @returns Middleware Express avec req.body.validated contenant les données validées.
- * @throws AppError avec statut 400 si la validation échoue.
+ * Generic middleware validating the body of the request with Zod.
+ * The body is never logged: it holds the data of the user.
+ * @param schema Zod schema used for the validation.
+ * @returns Express middleware, which adds the validated data in req.body.validatedData.body.
+ * @throws AppError with status 400 if the validation fails.
  */
 export const bodyValidator = (schema: ZodType) => (req: Request, _res: Response, next: NextFunction) => {
     try {
-        logger.debug("body", req.body);
-        req.body = { ...req.body, validatedData: { ...req.body.validatedData, body: schema.parse(req.body) } };
+        req.body = { ...req.body, validatedData: { ...req.body?.validatedData, body: schema.parse(req.body) } };
         next();
     } catch (error) {
-        logger.debug("Body validation error:", error);
         next(new AppError("Invalid request data", 400));
     }
 };

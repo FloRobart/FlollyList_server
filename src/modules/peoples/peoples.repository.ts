@@ -1,7 +1,13 @@
-import type { People, PeopleInsert, PeopleUpdate } from "./peoples.types";
-
 import { AppError } from "../../core/models/AppError.model";
 import { Database } from "../../core/models/Database.model";
+import { People, PeopleInsert, PeopleUpdate } from "./peoples.types";
+
+
+
+/*
+ * Every query names the user: a user only ever reaches its own people.
+ * Database.execute already turns any failure into an AppError, without revealing the database.
+ */
 
 
 
@@ -9,22 +15,28 @@ import { Database } from "../../core/models/Database.model";
 /* SELECT */
 /*========*/
 /**
- * Get all peoples for a user.
+ * Gets all the people of a user.
  * @param userId The ID of the user.
- * @returns An array of People objects.
- * @throws AppError if there is an issue retrieving the peoples.
+ * @returns The people of the user, in the order of their creation.
+ * @throws AppError if the people cannot be retrieved.
  */
 export async function selectPeoples(userId: number): Promise<People[]> {
-    try {
-        let query = "SELECT * FROM peoples WHERE user_id = $1;";
-        let values = [userId];
+    const query = "SELECT * FROM peoples WHERE user_id = $1 ORDER BY id;";
 
-        const peoples = await Database.execute<People>({ text: query, values: values });
+    return await Database.execute<People>({ text: query, values: [userId] });
+}
 
-        return peoples
-    } catch (error) {
-        throw (error instanceof AppError) ? error : new AppError("Failed to retrieve peoples", 500);
-    }
+/**
+ * Counts the people of a user.
+ * @param userId The ID of the user.
+ * @returns The number of people of the user.
+ * @throws AppError if the people cannot be counted.
+ */
+export async function countPeoples(userId: number): Promise<number> {
+    const query = "SELECT count(*)::integer AS count FROM peoples WHERE user_id = $1;";
+
+    const rows = await Database.execute<{ count: number }>({ text: query, values: [userId] });
+    return rows[0].count;
 }
 
 
@@ -32,27 +44,24 @@ export async function selectPeoples(userId: number): Promise<People[]> {
 /* INSERT */
 /*========*/
 /**
- * Insert a new people for a user.
- * @param peopleData The people data to insert.
- * @returns The newly created People object.
- * @throws AppError if there is an issue inserting the people.
+ * Creates a person for a user.
+ * @param userId The ID of the user.
+ * @param people The person to create.
+ * @returns The created person.
+ * @throws AppError if the person cannot be created.
  */
-export async function insertPeoples(peopleData: PeopleInsert): Promise<People> {
-    try {
-        const keys = Object.keys(peopleData);
-        const columns = keys.join(", ");
-        const placeholders = keys.map((_, i) => `$${i + 1}`).join(", ");
+export async function insertPeople(userId: number, people: PeopleInsert): Promise<People> {
+    const query = `
+        INSERT INTO peoples (first_name, last_name, date_of_birth, user_id)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *;
+    `;
+    const values = [people.first_name, people.last_name, people.date_of_birth, userId];
 
-        const values = keys.map(key => (peopleData as any)[key]);
-        const query = `INSERT INTO peoples (${columns}) VALUES (${placeholders}) RETURNING *;`;
+    const rows = await Database.execute<People>({ text: query, values });
+    if (rows.length === 0) { throw new AppError("No people inserted", 500); }
 
-        const rows = await Database.execute<People>({ text: query, values });
-        if (rows.length === 0) { throw new AppError("No people inserted", 500); }
-
-        return rows[0];
-    } catch (error) {
-        throw (error instanceof AppError) ? error : new AppError("Failed to insert peoples", 500);
-    }
+    return rows[0];
 }
 
 
@@ -60,36 +69,26 @@ export async function insertPeoples(peopleData: PeopleInsert): Promise<People> {
 /* UPDATE */
 /*========*/
 /**
- * Update an existing people for a user.
- * @param peopleData The people data to update.
- * @returns The updated People object.
+ * Replaces the fields of a person of a user.
+ * @param userId The ID of the user.
+ * @param peopleId The ID of the person to update.
+ * @param people The new fields of the person.
+ * @returns The updated person.
+ * @throws AppError 404 if the user has no person with this ID.
  */
-export async function updatePeoples(peopleData: PeopleUpdate): Promise<People> {
-    try {
-        /* Extract id and user_id, prepare fields to update */
-        const { id, user_id, ...fieldsToUpdate } = peopleData;
-        const keys = Object.keys(fieldsToUpdate);
+export async function updatePeople(userId: number, peopleId: number, people: PeopleUpdate): Promise<People> {
+    const query = `
+        UPDATE peoples
+        SET first_name = $1, last_name = $2, date_of_birth = $3
+        WHERE id = $4 AND user_id = $5
+        RETURNING *;
+    `;
+    const values = [people.first_name, people.last_name, people.date_of_birth, peopleId, userId];
 
-        if (!id || !user_id || keys.length === 0) {
-            throw new AppError("Missing data to update", 400);
-        }
+    const rows = await Database.execute<People>({ text: query, values });
+    if (rows.length === 0) { throw new AppError("No people updated", 404); }
 
-        /* Build SET clause and values */
-        const setClause = keys.map((key, i) => `${key} = $${i + 1}`).join(", ");
-        const values = keys.map(key => (fieldsToUpdate as any)[key]);
-
-        /* Append id and user_id to values for WHERE clause */
-        const query = `UPDATE peoples SET ${setClause} WHERE id = $${values.length + 1} AND user_id = $${values.length + 2} RETURNING *;`;
-        values.push(id, user_id);
-
-        /* Execute query */
-        const rows = await Database.execute<People>({ text: query, values });
-        if (rows.length === 0) { throw new AppError("No people updated", 404); }
-
-        return rows[0];
-    } catch (error) {
-        throw (error instanceof AppError) ? error : new AppError("Failed to update peoples", 500);
-    }
+    return rows[0];
 }
 
 
@@ -97,22 +96,17 @@ export async function updatePeoples(peopleData: PeopleUpdate): Promise<People> {
 /* DELETE */
 /*========*/
 /**
- * Delete an people for a user.
+ * Deletes a person of a user, with all its gifts (ON DELETE CASCADE in the database).
  * @param userId The ID of the user.
- * @param peopleId The ID of the people to delete.
- * @returns The deleted People object.
- * @throws AppError if there is an issue deleting the people.
+ * @param peopleId The ID of the person to delete.
+ * @returns The deleted person.
+ * @throws AppError 404 if the user has no person with this ID.
  */
-export async function deletePeoples(userId: number, peopleId: number): Promise<People> {
-    try {
-        const query = `DELETE FROM peoples WHERE id = $1 AND user_id = $2 RETURNING *;`;
-        const values = [peopleId, userId];
+export async function deletePeople(userId: number, peopleId: number): Promise<People> {
+    const query = "DELETE FROM peoples WHERE id = $1 AND user_id = $2 RETURNING *;";
 
-        const rows = await Database.execute<People>({ text: query, values });
-        if (rows.length === 0) { throw new AppError("No people deleted", 404); }
+    const rows = await Database.execute<People>({ text: query, values: [peopleId, userId] });
+    if (rows.length === 0) { throw new AppError("No people deleted", 404); }
 
-        return rows[0];
-    } catch (error) {
-        throw (error instanceof AppError) ? error : new AppError("Failed to delete peoples", 500);
-    }
+    return rows[0];
 }

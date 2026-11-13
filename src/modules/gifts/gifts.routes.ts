@@ -1,9 +1,9 @@
 import { Router } from "express";
+import * as GiftsController from "./gifts.controller";
 import { bodyValidator } from "../../core/middlewares/validators/body_validator.middleware";
 import { paramsQueryValidator } from "../../core/middlewares/validators/params_query_validator.middleware";
-import * as GiftsController from "./gifts.controller";
+import { IdParamsSchema } from "../../core/schemas/common.schema";
 import { GiftsInsertSchema, GiftsUpdateSchema } from "./gifts.schema";
-import { IdSchema } from "../../core/schemas/common.schema";
 
 
 
@@ -20,21 +20,19 @@ const router = Router();
  *   get:
  *     tags:
  *       - Gifts
- *     summary: Retrieve a list of gifts of the authenticated user
- *     description: Retrieve a list of gifts associated with the authenticated user.
+ *     summary: Retrieve the gifts of the authenticated user
+ *     description: Retrieve every gift of the authenticated user, for all of its people, in the order of their creation.
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: A list of gifts
+ *         description: The gifts of the user, an empty array if there are none
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Gifts'
- *       204:
- *         description: No content. No gifts found.
  *       401:
  *         description: Unauthorized access.
  *         content:
@@ -60,8 +58,8 @@ router.get('/', GiftsController.selectGifts);
  *   post:
  *     tags:
  *       - Gifts
- *     summary: Create a new gift for the authenticated user
- *     description: Create a new gift associated with the authenticated user.
+ *     summary: Create a gift for a person of the authenticated user
+ *     description: Create a gift for one of the people of the authenticated user. Empty texts are stored as null.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -89,6 +87,18 @@ router.get('/', GiftsController.selectGifts);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/error401'
+ *       403:
+ *         description: The user has reached the maximum number of gifts.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error403'
+ *       404:
+ *         description: The person of the gift is not one of the people of the user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error404'
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
@@ -96,7 +106,7 @@ router.get('/', GiftsController.selectGifts);
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/', bodyValidator(GiftsInsertSchema), GiftsController.insertGifts);
+router.post('/', bodyValidator(GiftsInsertSchema), GiftsController.insertGift);
 
 
 /*========*/
@@ -108,8 +118,8 @@ router.post('/', bodyValidator(GiftsInsertSchema), GiftsController.insertGifts);
  *   put:
  *     tags:
  *       - Gifts
- *     summary: Update an existing gift for the authenticated user
- *     description: Update an existing gift associated with the authenticated user.
+ *     summary: Update a gift of the authenticated user
+ *     description: Replace every field of a gift of the authenticated user. The gift can move to another of its people.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -144,6 +154,12 @@ router.post('/', bodyValidator(GiftsInsertSchema), GiftsController.insertGifts);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/error401'
+ *       404:
+ *         description: The user has no gift with this ID, or the person of the gift is not one of its people.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error404'
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
@@ -151,7 +167,7 @@ router.post('/', bodyValidator(GiftsInsertSchema), GiftsController.insertGifts);
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.put('/:id', paramsQueryValidator(IdSchema), bodyValidator(GiftsUpdateSchema), GiftsController.updateGifts);
+router.put('/:id', paramsQueryValidator(IdParamsSchema), bodyValidator(GiftsUpdateSchema), GiftsController.updateGift);
 
 
 /*========*/
@@ -163,8 +179,8 @@ router.put('/:id', paramsQueryValidator(IdSchema), bodyValidator(GiftsUpdateSche
  *   delete:
  *     tags:
  *       - Gifts
- *     summary: Delete an existing gift for the authenticated user
- *     description: Delete an existing gift associated with the authenticated user.
+ *     summary: Delete a gift of the authenticated user
+ *     description: Delete a gift of the authenticated user.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -193,6 +209,12 @@ router.put('/:id', paramsQueryValidator(IdSchema), bodyValidator(GiftsUpdateSche
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/error401'
+ *       404:
+ *         description: The user has no gift with this ID.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error404'
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
@@ -200,7 +222,7 @@ router.put('/:id', paramsQueryValidator(IdSchema), bodyValidator(GiftsUpdateSche
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.delete('/:id', paramsQueryValidator(IdSchema), GiftsController.deleteGifts);
+router.delete('/:id', paramsQueryValidator(IdParamsSchema), GiftsController.deleteGift);
 
 
 

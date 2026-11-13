@@ -1,18 +1,18 @@
 import express from 'express';
 import { Request } from 'express';
-import helmet from 'helmet';
 import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
 import fs from 'node:fs';
 import path from 'node:path';
+import AppConfig from './config/AppConfig';
 import { errorHandler } from './core/middlewares/error.middleware';
 import { helmetOptions } from './core/middlewares/helmet_http_headers.middleware';
 import { limiter } from './core/middlewares/rate_limiter.middleware';
-import { authorizationValidator } from './core/middlewares/validators/auth_validator.middleware';
 import { defaultRouteHandler } from './core/middlewares/default_route.middleware';
-import giftsRoutes from './modules/gifts/gifts.routes';
+import { authorizationValidator } from './core/middlewares/validators/auth_validator.middleware';
 import peoplesRoutes from './modules/peoples/peoples.routes';
-import AppConfig from './config/AppConfig';
-import morgan from 'morgan';
+import giftsRoutes from './modules/gifts/gifts.routes';
 
 
 
@@ -42,7 +42,7 @@ app.get('/', (_req, res) => { res.status(200).send('HEALTH CHECK') });
 
 /* Favicon */
 app.get("/favicon.ico", (_req, res) => {
-    res.sendFile(path.join(__dirname, "../public/icons/favicon.ico"));
+    res.sendFile(path.join(process.cwd(), "public", "icons", "favicon.ico"));
 });
 
 /* Static public files */
@@ -89,20 +89,20 @@ if (AppConfig.app_env.includes('dev')) {
 /* Authentication Middleware */
 app.use(authorizationValidator);
 
-/* Logger */
+
+/* Logger: the ID of the user rather than its email, which has nothing to do in the logs */
 morgan.token("remote-user", (req: Request) => {
-    const bodyUserEmail = (req as any)?.body?.user?.email;
-    const reqUserEmail = (req as any)?.user?.email;
-    return bodyUserEmail || reqUserEmail || "Unknown User";
+    const userId = req.body?.user?.id;
+    return userId ? `user-${userId}` : "Unknown User";
 });
 app.use(morgan(AppConfig.log_format));
 
 
-/* Gifts routes */
-app.use('/gifts', giftsRoutes);
-
 /* People routes */
 app.use('/peoples', peoplesRoutes);
+
+/* Gifts routes */
+app.use('/gifts', giftsRoutes);
 
 
 /* Default Route Handler (404) */

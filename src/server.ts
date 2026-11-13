@@ -7,9 +7,9 @@ import * as logger from './core/utils/logger';
 
 
 (async () => {
-    /*------------------------*/
+    /*========================*/
     /* Connection to Database */
-    /*------------------------*/
+    /*========================*/
     try {
         const database = new Database(AppConfig.db_uri);
         await database.connect();
@@ -20,9 +20,9 @@ import * as logger from './core/utils/logger';
     }
 
 
-    /*------------------*/
+    /*==================*/
     /* Écoute du server */
-    /*------------------*/
+    /*==================*/
     const server = http.createServer(app);
 
     server.listen(AppConfig.app_port, AppConfig.host_name, () => {
